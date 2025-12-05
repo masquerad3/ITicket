@@ -1,7 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: DM Sans, sans-serif;
 }
 
 .wrapper {
@@ -13,7 +16,19 @@
 
 .wrapper .left-panel {
   background-color: #6f3fd3;
+  color: white;
+  font-size: 1.5em;
 }
+.wrapper .left-panel .inner {
+  padding: 80px;
+  display: flex;
+  flex-direction: column;   /* stack logo above text */
+  align-items: flex-start;  /* left-align content */
+  justify-content: center;  /* center vertically */
+  gap: 24px;                /* spacing between logo and text */
+  height: 100%;
+}
+
 .wrapper .right-panel {
   background-color: white;
 }
