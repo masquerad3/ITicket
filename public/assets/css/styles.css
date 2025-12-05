@@ -15,12 +15,13 @@
 }
 
 .wrapper .left-panel {
-  background-color: #6f3fd3;
+  /* background-color: #6f3fd3; */
+  background: linear-gradient(135deg, #6f3fd3 0%, #5a3bd1 40%, #4a48d1 100%);
   color: white;
   font-size: 1.5em;
 }
 .wrapper .left-panel .inner {
-  padding: 80px;
+  padding: 140px;
   display: flex;
   flex-direction: column;   /* stack logo above text */
   align-items: flex-start;  /* left-align content */
@@ -31,4 +32,44 @@
 
 .wrapper .right-panel {
   background-color: white;
+}
+.wrapper .right-panel .inner {
+  padding: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  height: 100%;
+  gap: 20px;
+}
+
+.right-panel .inner h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f1f1f;
+}
+.right-panel .inner p {
+  color: #5f5f5f;
+}
+
+.right-panel .inner #loginForm {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+}
+#loginForm label {
+  font-size: 0.9rem;
+  color: #444;
+}
+#loginForm #username, #password {
+  height: 48px;
+  border-radius: 20px;
+  border: none;
+  padding: 0 16px;
+  background: linear-gradient(180deg, #f5f2ff 0%, #eee9ff 100%);
+}
+#loginForm input::placeholder {
+  color: #7a6fb3;
+  font-style: italic;
 }

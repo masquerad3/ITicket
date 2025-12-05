@@ -25,7 +25,20 @@
     </div>
 
     <div class="right-panel">
+      <div class="inner">
+        <h2>Log In</h2>
+        <p>Enter your credentials to access your account</p>
 
+        <form id="loginForm" novalidate>
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Username" autocomplete="username" required />
+
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password" required>
+          
+          <button type="submit">Log In</button>
+        </form>
+      </div>
     </div>
   </div>
 
