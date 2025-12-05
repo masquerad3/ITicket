@@ -1,0 +1,19 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 55vw auto;
+  width: 100vw;
+  height: 100vh;
+}
+
+.wrapper .left-panel {
+  background-color: #6f3fd3;
+}
+.wrapper .right-panel {
+  background-color: white;
+}
