@@ -16,9 +16,9 @@
 
 .wrapper .left-panel {
   /* background-color: #6f3fd3; */
-  background: linear-gradient(135deg, #6f3fd3 0%, #5a3bd1 40%, #4a48d1 100%);
+  background: linear-gradient(135deg, #667DE9 0%, #6D65C7 40%, #764EA5 100%);
   color: white;
-  font-size: 1.5em;
+  font-size: 1.5rem;
 }
 .wrapper .left-panel .inner {
   padding: 140px;
@@ -34,13 +34,14 @@
   background-color: white;
 }
 .wrapper .right-panel .inner {
-  padding: 140px;
+  padding: 0 180px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   height: 100%;
   gap: 20px;
+  width: 100%;
 }
 
 .right-panel .inner h2 {
@@ -50,26 +51,90 @@
 }
 .right-panel .inner p {
   color: #5f5f5f;
+  margin-bottom: 50px;
 }
 
 .right-panel .inner #loginForm {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 420px;
 }
-#loginForm label {
+
+#loginForm .form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+  gap: 8px;
+}
+#loginForm .form-row label {
   font-size: 0.9rem;
+  font-weight: 500;
   color: #444;
+  padding: 0 15px;
 }
-#loginForm #username, #password {
+.form-row .input-box {
+  display: flex;
+  align-items: center;
+  background-color: #f5f2ff;
+  border-radius: 20px;
+  padding: 0 20px;
+  width: 100%;
+}
+.form-row .input-box i {
+  color: #7a6fb3;
+  font-size: 1.2rem;
+}
+.form-row .input-box #username, #password {
   height: 48px;
   border-radius: 20px;
   border: none;
   padding: 0 16px;
-  background: linear-gradient(180deg, #f5f2ff 0%, #eee9ff 100%);
+  width: 100%;
+  background: transparent;
+  font-size: 0.9rem;
 }
-#loginForm input::placeholder {
+
+.form-row .input-box input::placeholder {
   color: #7a6fb3;
   font-style: italic;
+}
+.form-row .input-box input:focus {
+  outline: none;
+}
+
+#loginForm .forgot-pw {
+  align-self: flex-end;
+  font-size: 0.9rem;
+  margin-bottom: 100px;
+}
+#loginForm .forgot-pw a {
+  color: #7a6fb3;
+  text-decoration: none;
+  font-style: italic;
+}
+
+#loginForm .login-button button {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #667DE9 0%, #6D65C7 40%, #764EA5 100%);
+  color: white;
+  font-size: 1rem;
+}
+.login-button button:hover {
+  cursor: pointer;
+  box-shadow: 0 4px 7px rgba(118, 78, 165, 0.2);
+  transition: box-shadow 0.15s ease;
+}
+
+#loginForm .signup-link {
+  align-self: center;
+  font-size: 1rem;
+  margin-top: 15px;
+  color: #7a6fb3;
+}
+#loginForm .signup-link a {
+  text-decoration: none;
+  font-weight: 600;
 }
