@@ -1,4 +1,4 @@
-# 🎫 ITicket — Support Ticket Management System
+# 🎫 ITicket - Support Ticket Management System
 
 ITicket is a web-based Support Ticket Management System designed for non-IT users, IT staff, and administrators. It helps submit and manage support requests, track resolution progress, monitor performance, and maintain system health using a clean, user-friendly interface.
 
