@@ -80,26 +80,39 @@
   padding: 0 20px;
   width: 100%;
 }
+
 .form-row .input-box i {
   color: #7a6fb3;
   font-size: 1.2rem;
 }
 .form-row .input-box #username, #password {
   height: 48px;
-  border-radius: 20px;
   border: none;
   padding: 0 16px;
   width: 100%;
   background: transparent;
   font-size: 0.9rem;
+  color: #2b2b2b;
 }
-
 .form-row .input-box input::placeholder {
   color: #7a6fb3;
   font-style: italic;
 }
 .form-row .input-box input:focus {
   outline: none;
+}
+.form-row .input-box .toggle-pw {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #7a6fb3;
+  border-radius: 8px;
 }
 
 #loginForm .forgot-pw {
@@ -121,11 +134,12 @@
   background: linear-gradient(135deg, #667DE9 0%, #6D65C7 40%, #764EA5 100%);
   color: white;
   font-size: 1rem;
+  font-weight: 700;
 }
 .login-button button:hover {
   cursor: pointer;
-  box-shadow: 0 4px 7px rgba(118, 78, 165, 0.2);
-  transition: box-shadow 0.15s ease;
+  filter: brightness(1.05);
+  transition: filter 0.2s ease;
 }
 
 #loginForm .signup-link {
