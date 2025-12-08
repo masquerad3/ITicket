@@ -6,19 +6,53 @@
 
   <title>ITicket - Dashboard</title>
 
-  <!-- Main CSS -->
-  <link rel="stylesheet" href="assets/css/styles.css" />
-  <!-- Boxicons CSS -->
+  <!-- Global styles -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <!-- Page styles -->
+  <link rel="stylesheet" href="assets/css/pages/dashboard.css">
+  <!-- Boxicons -->
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 
 <body>
-  <div class="wrapper">
-    <header>
-      <nav>
+  <div class="page">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-button">
+          <i class='bx bx-menu'></i>
+        </button>
+      </div>
+      
+      <div class="topbar-right">
+        <button class="notif-button">
+          <i class='bx bx-bell'></i>
+        </button>
         
-      </nav>
+        <div class="profile-chip">
+          <div class="avatar">SM</div>
+          
+          <div class="user-meta">
+            <p class="user-name">Samuel Muralidharan</p>
+            <p class="user-role">Non-IT</p>
+          </div>
+        </div>
+      </div>
     </header>
+
+    <main class="content">
+      <div class="welcome-banner">
+        <div class="banner-text">
+          <h2>Welcome back, <strong>Samuel</strong>!</h1>
+          <p>Need help with an IT issue? Submit a ticket and we'll get right on it.</p>
+        </div>
+        <a class="new-ticket-btn" href="">
+          <i class='bx bx-plus'></i> 
+          <p>Create New Ticket</p>
+        </a>
+      </div>
+    </main>
+
   </div>
 
   <script src="assets/js/script.js"></script>
