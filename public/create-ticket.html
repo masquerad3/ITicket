@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>ITicket - Create Ticket</title>
+
+  <!-- Global/base -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <!-- Shared components -->
+  <link rel="stylesheet" href="assets/css/components/topbar.css">
+  <link rel="stylesheet" href="assets/css/components/sidebar.css">
+  <!-- Page-specific -->
+  <link rel="stylesheet" href="assets/css/pages/create-ticket.css">
+
+  <!-- Icons -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="page">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-button" aria-label="Open menu">
+          <i class='bx bx-menu'></i>
+        </button>
+      </div>
+      <div class="topbar-right">
+        <button class="notif-button" aria-label="Notifications"><i class='bx bx-bell'></i></button>
+        <div class="profile-chip" role="button" tabindex="0">
+          <div class="avatar">SM</div>
+          <div class="user-meta">
+            <p class="user-name">Samuel Muralidharan</p>
+            <p class="user-role">Non-IT</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="slide-menu" aria-label="Main menu">
+      <div class="menu-header">
+        <button class="menu-close" aria-label="Close menu"><i class='bx bxs-chevron-right-circle'></i></button>
+      </div>
+      <div class="menu-content">
+        <nav class="menu-group">
+          <h4 class="group-title">Main Menu</h4>
+          <a class="menu-link" href="dashboard.html"><i class='bx bx-home'></i> Dashboard</a>
+          <a class="menu-link" href="tickets.html"><i class='bx bx-list-check'></i> My Ticket</a>
+          <a class="menu-link active" href="create-ticket.html"><i class='bx bx-plus-circle'></i> Create Ticket</a>
+        </nav>
+        <nav class="menu-group">
+          <h4 class="group-title">Support</h4>
+          <a class="menu-link" href="kb.html"><i class='bx bx-book'></i> Knowledge Base</a>
+          <a class="menu-link" href="#"><i class='bx bx-chat'></i> Live Chat</a>
+          <a class="menu-link" href="#"><i class='bx bx-envelope'></i> Contact</a>
+        </nav>
+        <nav class="menu-group">
+          <h4 class="group-title">Account</h4>
+          <a class="menu-link" href="profile.html"><i class='bx bx-user-circle'></i> Profile</a>
+          <a class="menu-link" href="settings.html"><i class='bx bx-cog'></i> Settings</a>
+        </nav>
+      </div>
+    </aside>
+    <div class="backdrop" aria-hidden="true"></div>
+
+    <!-- Content -->
+    <main class="content">
+      <header class="page-header">
+        <div class="page-header-left">
+          <h2>Create New Ticket</h2>
+          <p class="muted">Tell us what you need help with. The more details, the faster we can assist.</p>
+        </div>
+        <div class="page-header-actions">
+          <a class="btn-outlined" href="tickets.html"><i class='bx bx-left-arrow-alt'></i> Back to Tickets</a>
+        </div>
+      </header>
+
+      <section class="create-grid">
+        <!-- Form -->
+        <section class="panel form-panel">
+          <form id="ticketForm" novalidate>
+            <h3 class="panel-title">Ticket Details</h3>
+
+            <div class="form-grid">
+              <div class="field full">
+                <label for="subject">Subject</label>
+                <input id="subject" name="subject" type="text" placeholder="Brief summary (e.g., Cannot access email)" required>
+                <small class="hint">Keep it short and specific.</small>
+              </div>
+
+              <div class="field">
+                <label for="category">Category</label>
+                <div class="select-pill wide">
+                  <select id="category" name="category" required>
+                    <option value="" disabled selected>Select category</option>
+                    <option>Account/Access</option>
+                    <option>Software</option>
+                    <option>Hardware</option>
+                    <option>Network</option>
+                    <option>Request</option>
+                    <option>Other</option>
+                  </select>
+                  <i class='bx bx-chevron-down'></i>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="priority">Priority</label>
+                <div class="select-pill">
+                  <select id="priority" name="priority" required>
+                    <option>Medium</option>
+                    <option>High</option>
+                    <option>Low</option>
+                  </select>
+                  <i class='bx bx-chevron-down'></i>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="department">Department (optional)</label>
+                <input id="department" name="department" type="text" placeholder="Your department">
+              </div>
+
+              <div class="field">
+                <label for="location">Location (optional)</label>
+                <input id="location" name="location" type="text" placeholder="Building/Room (e.g., Main 3A)">
+              </div>
+
+              <div class="field full">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="6" placeholder="Describe the issue, steps to reproduce, and any error messages." required></textarea>
+                <div class="desc-row">
+                  <small class="hint">Tip: Include screenshots or exact error text.</small>
+                  <small class="counter" id="descCounter">0 / 1000</small>
+                </div>
+              </div>
+
+              <div class="field full">
+                <label>Attachments</label>
+                <div class="dropzone" id="dropzone" tabindex="0" aria-label="File upload area">
+                  <i class='bx bx-cloud-upload'></i>
+                  <p>Drag & drop files here or <button type="button" class="linklike" id="pickFiles">browse</button></p>
+                  <small class="muted">PNG, JPG, PDF, DOCX up to 10MB each</small>
+                  <input id="fileInput" name="files" type="file" multiple hidden accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.txt">
+                </div>
+                <ul class="file-list" id="fileList" aria-live="polite"></ul>
+              </div>
+
+              <div class="field full">
+                <label>Preferred contact</label>
+                <div class="radio-row">
+                  <label class="radio">
+                    <input type="radio" name="contact" value="email" checked>
+                    <span>Email</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" name="contact" value="phone">
+                    <span>Phone</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" name="contact" value="teams">
+                    <span>Teams/Chat</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="field full">
+                <label class="checkbox">
+                  <input type="checkbox" id="consent" required>
+                  <span>Confirm the information provided is accurate to the best of my knowledge.</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn-outlined" type="button" onclick="history.back()">Cancel</button>
+              <button class="btn-primary" type="submit">Submit Ticket</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Right: Help panel -->
+        <aside class="panel help-panel">
+          <div class="help-head">
+            <h3>Tips for a fast resolution</h3>
+          </div>
+          <ul class="tips">
+            <li>Share exact error messages or screenshots.</li>
+            <li>Tell us when it started and how often it happens.</li>
+            <li>Include device, OS, and network if relevant.</li>
+            <li>Set the right priority. Use High only if work is blocked.</li>
+          </ul>
+
+          <div class="help-head mt">
+            <h3>Example subjects</h3>
+          </div>
+          <ul class="examples">
+            <li>"Outlook: cannot send emails — error 0x800CCC0E"</li>
+            <li>"Request: Adobe Photoshop installation for Marketing PC"</li>
+            <li>"VPN connects but no internet access"</li>
+          </ul>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="assets/js/components/sidebar.js"></script>
+  <script src="assets/js/pages/create-ticket.js"></script>
+</body>
+</html>
