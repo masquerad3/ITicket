@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ITicket - Settings</title>
+
+  <!-- Global/base -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <!-- Shared components -->
+  <link rel="stylesheet" href="assets/css/components/topbar.css">
+  <link rel="stylesheet" href="assets/css/components/sidebar.css">
+  <!-- Page-specific (new design) -->
+  <link rel="stylesheet" href="assets/css/pages/settings.css">
+
+  <!-- Icons -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="page">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-button">
+          <i class='bx bx-menu'></i>
+        </button>
+      </div>
+      <div class="topbar-right">
+        <button class="notif-button"><i class='bx bx-bell'></i></button>
+        <div class="profile-chip" tabindex="0">
+          <div class="avatar">SM</div>
+          <div class="user-meta">
+            <p class="user-name">Samuel Muralidharan</p>
+            <p class="user-role">Non-IT</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="slide-menu">
+      <div class="menu-header">
+        <button class="menu-close"><i class='bx bxs-chevron-right-circle'></i></button>
+      </div>
+
+      <div class="menu-content">
+        <nav class="menu-group">
+          <h4 class="group-title">Main Menu</h4>
+          <a class="menu-link" href="dashboard.html"><i class='bx bx-home'></i> Dashboard</a>
+          <a class="menu-link" href="tickets.html"><i class='bx bx-list-check'></i> My Ticket</a>
+          <a class="menu-link" href="create-ticket.html"><i class='bx bx-plus-circle'></i> Create Ticket</a>
+        </nav>
+        <nav class="menu-group">
+          <h4 class="group-title">Support</h4>
+          <a class="menu-link" href="knowledge.html"><i class='bx bx-book'></i> Knowledge Base</a>
+          <a class="menu-link" href="#"><i class='bx bx-chat'></i> Live Chat</a>
+          <a class="menu-link" href="#"><i class='bx bx-envelope'></i> Contact</a>
+        </nav>
+        <nav class="menu-group">
+          <h4 class="group-title">Account</h4>
+          <a class="menu-link" href="profile.html"><i class='bx bx-user-circle'></i> Profile</a>
+          <a class="menu-link active" href="settings.html"><i class='bx bx-cog'></i> Settings</a>
+        </nav>
+      </div>
+    </aside>
+    <div class="backdrop"></div>
+
+    <!-- Content -->
+    <main class="content">
+      <!-- Hero -->
+      <section class="settings-hero">
+        <div class="hero-text">
+          <h2>Settings</h2>
+          <p>Tune your preferences, notifications, and security.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn-soft"><i class='bx bx-refresh'></i> Reset</button>
+          <button class="btn-primary"><i class='bx bx-save'></i> Save Changes</button>
+        </div>
+      </section>
+
+      <!-- Shell: left nav + right content -->
+      <section class="settings-shell">
+        <aside class="settings-nav">
+          <a class="nav-link active" href="#general"><i class='bx bx-palette'></i> General</a>
+          <a class="nav-link" href="#notifications"><i class='bx bx-bell'></i> Notifications</a>
+          <a class="nav-link" href="#security"><i class='bx bx-shield-quarter'></i> Security</a>
+          <a class="nav-link" href="#data"><i class='bx bx-data'></i> Data & Account</a>
+        </aside>
+
+        <section class="settings-content">
+          <!-- General -->
+          <article id="general" class="panel">
+            <div class="panel-head">
+              <h3>General</h3>
+            </div>
+            <div class="panel-body">
+              <div class="field">
+                <label>Theme</label>
+                <div class="chips">
+                  <button class="chip selected"><i class='bx bx-sun'></i> Light</button>
+                  <button class="chip"><i class='bx bx-moon'></i> Dark</button>
+                  <button class="chip"><i class='bx bx-desktop'></i> System</button>
+                </div>
+              </div>
+
+              <div class="field two">
+                <div>
+                  <label>Language</label>
+                  <div class="select-pill wide">
+                    <select>
+                      <option>English (US)</option>
+                      <option>English (UK)</option>
+                      <option>Filipino</option>
+                    </select>
+                    <i class='bx bx-chevron-down'></i>
+                  </div>
+                </div>
+                <div>
+                  <label>Timezone</label>
+                  <div class="select-pill wide">
+                    <select>
+                      <option>UTC+08:00 (Manila)</option>
+                      <option>UTC+07:00</option>
+                      <option>UTC+09:00</option>
+                    </select>
+                    <i class='bx bx-chevron-down'></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Compact layout</label>
+                <label class="switch">
+                  <input type="checkbox">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </article>
+
+          <!-- Notifications -->
+          <article id="notifications" class="panel">
+            <div class="panel-head">
+              <h3>Notifications</h3>
+            </div>
+            <div class="panel-body">
+              <div class="card-row">
+                <div class="card">
+                  <div class="card-icon"><i class='bx bx-envelope'></i></div>
+                  <div class="card-text">
+                    <h4>Email notifications</h4>
+                    <p>Receive updates via email.</p>
+                  </div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="card-row">
+                <div class="card">
+                  <div class="card-icon soft"><i class='bx bx-mobile-alt'></i></div>
+                  <div class="card-text">
+                    <h4>Push notifications</h4>
+                    <p>Get alerts on your device.</p>
+                  </div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="field two">
+                <div>
+                  <label>Ticket updates</label>
+                  <div class="checkbox-list">
+                    <label class="checkbox"><input type="checkbox" checked> <span>New comment</span></label>
+                    <label class="checkbox"><input type="checkbox" checked> <span>Status change</span></label>
+                    <label class="checkbox"><input type="checkbox"> <span>Assigned to me</span></label>
+                  </div>
+                </div>
+                <div>
+                  <label>Digest frequency</label>
+                  <div class="chips">
+                    <button class="chip selected">Immediate</button>
+                    <button class="chip">Daily</button>
+                    <button class="chip">Weekly</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Security -->
+          <article id="security" class="panel">
+            <div class="panel-head">
+              <h3>Security</h3>
+            </div>
+            <div class="panel-body">
+              <div class="security-row">
+                <div class="security-card">
+                  <div class="security-icon"><i class='bx bx-shield'></i></div>
+                  <div class="security-text">
+                    <h4>Two‑step verification</h4>
+                    <p class="muted">Add an extra step at sign‑in.</p>
+                  </div>
+                </div>
+                <button class="btn-soft"><i class='bx bx-cog'></i> Manage</button>
+              </div>
+
+              <div class="security-row">
+                <div class="security-card">
+                  <div class="security-icon soft"><i class='bx bx-key'></i></div>
+                  <div class="security-text">
+                    <h4>Active sessions</h4>
+                    <p class="muted">Sign out elsewhere if needed.</p>
+                  </div>
+                </div>
+                <button class="btn-soft"><i class='bx bx-log-out'></i> Sign out of all</button>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="field">
+                <label>Auto sign‑out after 30 min idle</label>
+                <label class="switch">
+                  <input type="checkbox">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </article>
+
+          <!-- Data & Account -->
+          <article id="data" class="panel">
+            <div class="panel-head">
+              <h3>Data & Account</h3>
+            </div>
+            <div class="panel-body">
+              <div class="data-row">
+                <div class="data-text">
+                  <h4>Export my data</h4>
+                  <p class="muted">Download tickets and profile as a ZIP.</p>
+                </div>
+                <button class="btn-soft"><i class='bx bx-download'></i> Export</button>
+              </div>
+
+              <div class="data-row danger">
+                <div class="data-text">
+                  <h4>Deactivate account</h4>
+                  <p class="muted">Temporarily disable login and notifications.</p>
+                </div>
+                <button class="btn-danger"><i class='bx bx-power-off'></i> Deactivate</button>
+              </div>
+
+              <div class="data-row danger">
+                <div class="data-text">
+                  <h4>Delete account</h4>
+                  <p class="muted">Permanently remove your account and data.</p>
+                </div>
+                <button class="btn-danger"><i class='bx bx-trash'></i> Delete</button>
+              </div>
+            </div>
+          </article>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/components/sidebar.js"></script>
+</body>
+</html>
