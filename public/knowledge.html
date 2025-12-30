@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ITicket - Knowledge Base</title>
+
+  <!-- Global/base -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <!-- Shared components -->
+  <link rel="stylesheet" href="assets/css/components/topbar.css">
+  <link rel="stylesheet" href="assets/css/components/sidebar.css">
+  <!-- Page-specific -->
+  <link rel="stylesheet" href="assets/css/pages/knowledge.css">
+
+  <!-- Icons -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="page">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-button" aria-label="Open menu">
+          <i class='bx bx-menu'></i>
+        </button>
+      </div>
+      <div class="topbar-right">
+        <button class="notif-button" aria-label="Notifications"><i class='bx bx-bell'></i></button>
+        <div class="profile-chip" role="button" tabindex="0">
+          <div class="avatar">SM</div>
+          <div class="user-meta">
+            <p class="user-name">Samuel Muralidharan</p>
+            <p class="user-role">Non-IT</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="slide-menu" aria-label="Main menu">
+      <div class="menu-header">
+        <button class="menu-close" aria-label="Close menu"><i class='bx bxs-chevron-right-circle'></i></button>
+      </div>
+      <div class="menu-content">
+        <nav class="menu-group">
+          <h4 class="group-title">Main Menu</h4>
+          <a class="menu-link" href="dashboard.html"><i class='bx bx-home'></i> Dashboard</a>
+          <a class="menu-link" href="tickets.html"><i class='bx bx-list-check'></i> My Ticket</a>
+          <a class="menu-link" href="create-ticket.html"><i class='bx bx-plus-circle'></i> Create Ticket</a>
+        </nav>
+        <nav class="menu-group">
+          <h4 class="group-title">Support</h4>
+          <a class="menu-link active" href="knowledge.html"><i class='bx bx-book'></i> Knowledge Base</a>
+          <a class="menu-link" href="#"><i class='bx bx-chat'></i> Live Chat</a>
+          <a class="menu-link" href="#"><i class='bx bx-envelope'></i> Contact</a>
+        </nav>
+        <nav class="menu-group">
+          <h4 class="group-title">Account</h4>
+          <a class="menu-link" href="profile.html"><i class='bx bx-user-circle'></i> Profile</a>
+          <a class="menu-link" href="settings.html"><i class='bx bx-cog'></i> Settings</a>
+        </nav>
+      </div>
+    </aside>
+    <div class="backdrop" aria-hidden="true"></div>
+
+    <!-- Content -->
+    <main class="content">
+      <!-- Colorful hero with search -->
+      <section class="kb-hero">
+        <div class="hero-inner">
+          <div class="hero-text">
+            <h2>Knowledge Base</h2>
+            <p class="muted-light">Search guides and troubleshooting articles.</p>
+          </div>
+          <a class="hero-cta" href="create-ticket.html">
+            <i class='bx bx-plus'></i> Create Ticket
+          </a>
+
+          <div class="searchbar kb-search">
+            <i class='bx bx-search'></i>
+            <input type="text" placeholder="Search articles (e.g., reset password, VPN, Outlook)">
+            <button type="button" class="btn-clear" title="Clear"><i class='bx bx-x'></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Popular tags (neutral style) -->
+      <section class="tags-row">
+        <span class="tags-label">Popular:</span>
+        <button class="tag">Password</button>
+        <button class="tag">VPN</button>
+        <button class="tag">Email</button>
+        <button class="tag">Printer</button>
+        <button class="tag">Software</button>
+        <button class="tag">Network</button>
+      </section>
+
+      <!-- Categories with LEFT accent bar -->
+      <section class="categories">
+        <article class="cat-card cat--blue">
+          <div class="cat-icon"><i class='bx bx-user-check'></i></div>
+          <div class="cat-body">
+            <h3>Account & Access</h3>
+            <p>Passwords, MFA, accounts, and permissions.</p>
+          </div>
+          <a class="cat-link" href="#account">View 18 articles</a>
+        </article>
+
+        <article class="cat-card cat--indigo">
+          <div class="cat-icon"><i class='bx bx-envelope'></i></div>
+          <div class="cat-body">
+            <h3>Email & Calendar</h3>
+            <p>Outlook, mail apps, and calendar sync.</p>
+          </div>
+          <a class="cat-link" href="#email">View 12 articles</a>
+        </article>
+
+        <article class="cat-card cat--teal">
+          <div class="cat-icon"><i class='bx bx-plug'></i></div>
+          <div class="cat-body">
+            <h3>VPN & Network</h3>
+            <p>Remote access, Wi‑Fi, and connectivity.</p>
+          </div>
+          <a class="cat-link" href="#network">View 9 articles</a>
+        </article>
+
+        <article class="cat-card cat--green">
+          <div class="cat-icon"><i class='bx bx-desktop'></i></div>
+          <div class="cat-body">
+            <h3>Devices & Printing</h3>
+            <p>Printers, peripherals, and hardware.</p>
+          </div>
+          <a class="cat-link" href="#devices">View 14 articles</a>
+        </article>
+
+        <article class="cat-card cat--orange">
+          <div class="cat-icon"><i class='bx bx-paint'></i></div>
+          <div class="cat-body">
+            <h3>Software</h3>
+            <p>Installations, licensing, and updates.</p>
+          </div>
+          <a class="cat-link" href="#software">View 22 articles</a>
+        </article>
+
+        <article class="cat-card cat--pink">
+          <div class="cat-icon"><i class='bx bx-shield-quarter'></i></div>
+          <div class="cat-body">
+            <h3>Security</h3>
+            <p>MFA, phishing, device security tips.</p>
+          </div>
+          <a class="cat-link" href="#security">View 7 articles</a>
+        </article>
+      </section>
+
+      <!-- Article panels -->
+      <section class="kb-grid">
+        <!-- Featured -->
+        <section class="panel kb-panel">
+          <div class="panel-head">
+            <h3>Featured Articles</h3>
+            <a class="btn-outlined small" href="#">See all</a>
+          </div>
+          <div class="panel-body articles">
+            <article class="article-row">
+              <div class="art-left">
+                <i class='bx bxs-star'></i>
+                <a class="art-title" href="knowledge-article.html">Reset your account password (self-service portal)</a>
+                <p class="art-snippet">Use the password portal to reset or unlock your account with MFA…</p>
+                <div class="art-tags">
+                  <span class="chip chip-low">Password</span>
+                  <span class="chip chip-medium">MFA</span>
+                </div>
+              </div>
+              <div class="art-right">
+                <span class="meta">Updated 3 days ago</span>
+              </div>
+            </article>
+
+            <article class="article-row">
+              <div class="art-left">
+                <i class='bx bxs-star'></i>
+                <a class="art-title" href="knowledge-article.html">VPN: Connect from home (Windows & macOS)</a>
+                <p class="art-snippet">Step-by-step guide to install and connect using the GlobalProtect client…</p>
+              </div>
+              <div class="art-right"><span class="meta">Updated 1 week ago</span></div>
+            </article>
+
+            <article class="article-row">
+              <div class="art-left">
+                <i class='bx bxs-star'></i>
+                <a class="art-title" href="knowledge-article.html">Outlook: Fix “Disconnected” status</a>
+                <p class="art-snippet">Troubleshoot connectivity and profile issues causing Outlook to go offline…</p>
+              </div>
+              <div class="art-right"><span class="meta">Updated yesterday</span></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Latest -->
+        <section class="panel kb-panel">
+          <div class="panel-head">
+            <h3>Latest Articles</h3>
+            <a class="btn-outlined small" href="#">See all</a>
+          </div>
+          <div class="panel-body articles">
+            <article class="article-row">
+              <div class="art-left">
+                <i class='bx bx-file'></i>
+                <a class="art-title" href="#">Teams: Schedule a meeting with external guests</a>
+                <p class="art-snippet">Allow external emails, add the guest, and send the calendar invite…</p>
+              </div>
+              <div class="art-right"><span class="meta">2 days ago</span></div>
+            </article>
+
+            <article class="article-row">
+              <div class="art-left">
+                <i class='bx bx-file'></i>
+                <a class="art-title" href="#">Printer: Add campus printer on macOS</a>
+                <p class="art-snippet">Download the driver, add IP printer, select protocol and queue…</p>
+              </div>
+              <div class="art-right"><span class="meta">4 days ago</span></div>
+            </article>
+
+            <article class="article-row">
+              <div class="art-left">
+                <i class='bx bx-file'></i>
+                <a class="art-title" href="#">Request Adobe license for Marketing</a>
+                <p class="art-snippet">Complete the software request form and attach manager approval…</p>
+              </div>
+              <div class="art-right"><span class="meta">1 week ago</span></div>
+            </article>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/components/sidebar.js"></script>
+</body>
+</html>
