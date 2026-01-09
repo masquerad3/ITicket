@@ -31,11 +31,13 @@ ITicket focuses on:
 Install these first:
 
 1. **Git**
-2. **XAMPP** (PHP)
-3. **Composer** (PHP dependency manager)
-4. **Node.js + npm** (for Vite assets)
+2. **XAMPP with PHP 8.2 (ZTS x64)** — https://www.apachefriends.org/download.html
+3. **Composer** (PHP dependency manager) — https://getcomposer.org/
+4. **Node.js + npm** (for Vite assets) — https://nodejs.org/
 5. **Microsoft SQL Server Express** (local database)
 6. **SQL Server Management Studio (SSMS)**
+7. **ODBC Driver 18 for SQL Server** — https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
+8. **Visual C++ Redistributable 2015–2022** (x64)
 
 > Note: Laravel uses the `sqlsrv` driver, so SQL Server + drivers must be installed correctly.
 
