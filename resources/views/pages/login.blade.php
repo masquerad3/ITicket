@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>ITicket - Log In</title>
+
+  <!-- Global/base (reset, utilities, shared patterns) -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <!-- Page styles -->
+  <link rel="stylesheet" href="assets/css/pages/login.css">
+  
+  <!-- Icons -->
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+</head>
+
+<body>
+  <div class="page">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="inner">
+        <div class="logo">
+          <p>[logo]</p>
+        </div>
+        <div class="text-content">
+          <h1>Welcome to <strong>ITicket</strong></h1>
+          <p>Access your IT support dashboard and manage tickets efficiently. Report issues, track progress, and get faster support.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="inner">
+        <h2>Log In</h2>
+        <p>Enter your credentials to access your account</p>
+        
+        <form id="loginForm" novalidate>
+          <!-- Username -->
+          <div class="form-row">
+            <label for="username">Username</label>
+            <div class="input-box">
+              <i class='bx bxs-user'></i>
+              <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required />
+            </div>
+          </div>
+          
+          <!-- Password -->
+          <div class="form-row">
+            <label for="password">Password</label>
+            <div class="input-box">
+              <i class='bx bxs-lock' ></i>
+              <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+              <button type="button" class="toggle-pw">
+                <i class='bx bx-show'></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Forgot Password -->
+          <div class="forgot-pw">
+            <a href="#">Forgot Password?</a>
+          </div>
+
+          <!-- Login Button -->
+          <div class="login-button">
+            <button type="submit">Log In</button>
+          </div>
+
+          <!-- Sign-up Link -->
+          <div class="signup-link">
+            Don’t have an account? <a href="#">Sign up</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/script.js"></script>
+</body>
+</html>

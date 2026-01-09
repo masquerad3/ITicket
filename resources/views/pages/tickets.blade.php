@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>ITicket - My Tickets</title>
+ 
+  <!-- Global/base (reset, utilities, shared patterns) -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <!-- Shared component styles -->
+  <link rel="stylesheet" href="assets/css/components/topbar.css">
+  <link rel="stylesheet" href="assets/css/components/sidebar.css">
+  <!-- Page styles -->
+  <link rel="stylesheet" href="assets/css/pages/tickets.css">
+  
+  <!-- Icons -->
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-button">
+          <i class='bx bx-menu'></i>
+        </button>
+      </div>
+      
+      <div class="topbar-right">
+        <button class="notif-button">
+          <i class='bx bx-bell'></i>
+        </button>
+        
+        <div class="profile-chip">
+          <div class="avatar">SM</div>
+          
+          <div class="user-meta">
+            <p class="user-name">Samuel Muralidharan</p>
+            <p class="user-role">Non-IT</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Slide-out Sidebar -->
+    <aside class="slide-menu">
+      <div class="menu-header">
+        <button class="menu-close"><i class='bx bxs-chevron-right-circle'></i></button>
+      </div>
+
+      <div class="menu-content">
+        <nav class="menu-group">
+          <h4 class="group-title">Main Menu</h4>
+          <a class="menu-link" href="{{ route('dashboard') }}"><i class='bx bx-home'></i> Dashboard</a>
+          <a class="menu-link active" href="{{ route('tickets') }}"><i class='bx bx-list-check'></i> My Ticket</a>
+          <a class="menu-link" href="{{ route('create-ticket') }}"><i class='bx bx-plus-circle'></i> Create Ticket</a>
+        </nav>
+        <nav class="menu-group">
+          <h4 class="group-title">Support</h4>
+          <a class="menu-link" href="{{ route('knowledge') }}"><i class='bx bx-book'></i> Knowledge Base</a>
+          <a class="menu-link" href=""><i class='bx bx-chat'></i> Live Chat</a>
+          <a class="menu-link" href="{{ route('contact') }}"><i class='bx bx-envelope'></i> Contact</a>
+        </nav>
+        <nav class="menu-group">
+          <h4 class="group-title">Account</h4>
+          <a class="menu-link" href="{{ route('profile') }}"><i class='bx bx-user-circle'></i> Profile</a>
+          <a class="menu-link" href="{{ route('settings') }}"><i class='bx bx-cog'></i> Settings</a>
+        </nav>
+      </div>
+      
+    </aside>
+    <!-- Overlay backdrop -->
+    <div class="backdrop"></div>
+
+    
+    <main class="content">
+      <!-- Header + CTA -->
+      <header class="page-header">
+        <div class="page-header-left">
+          <h2>My Tickets</h2>
+          <p class="muted">View and manage all your submitted tickets</p>
+        </div>
+        <div class="page-header-actions">
+          <a class="btn-primary header-cta" href="{{ route('create-ticket') }}"><i class='bx bx-plus'></i> New Ticket</a>
+        </div>
+      </header>
+
+      <!-- Ticket Counters -->
+      <section class="counter">
+        <div class="counter-card counter-total">
+          <div class="counter-value">17</div>
+          <div class="counter-label">Total Tickets</div>
+        </div>
+        <div class="counter-card counter-open">
+          <div class="counter-value">3</div>
+          <div class="counter-label">Open Tickets</div>
+        </div>
+        <div class="counter-card counter-progress">
+          <div class="counter-value">2</div>
+          <div class="counter-label">In Progress</div>
+        </div>
+        <div class="counter-card counter-resolved">
+          <div class="counter-value">12</div>
+          <div class="counter-label">Resolved</div>
+        </div>
+      </section>
+
+      <!-- Filter bar (search + pill selects) -->
+      <section class="filters">
+        <div class="filter-bar">
+          <div class="searchbar">
+            <i class='bx bx-search'></i>
+            <input type="text" placeholder="Search tickets by ID, subject, or keyword">
+            <button type="button" class="btn-clear" title="Clear"><i class='bx bx-x'></i></button>
+          </div>
+
+          <div class="select-row">
+            <div class="select-pill">
+              <select id="statusFilter" aria-label="Status">
+                <option>All Status</option>
+                <option>Open</option>
+                <option>In Progress</option>
+                <option>Resolved</option>
+                <option>Closed</option>
+              </select>
+              <i class='bx bx-chevron-down'></i>
+            </div>
+
+            <div class="select-pill">
+              <select id="priorityFilter" aria-label="Priority">
+                <option>All Priority</option>
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </select>
+              <i class='bx bx-chevron-down'></i>
+            </div>
+
+            <div class="select-pill">
+              <select id="sortFilter" aria-label="Sort">
+                <option>Sort: Latest</option>
+                <option>Sort: Oldest</option>
+              </select>
+              <i class='bx bx-chevron-down'></i>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tickets Panel -->
+      <section class="panel tickets-panel">
+        <div class="panel-head">
+          <div class="results-left">
+            <strong>Showing 8 Tickets</strong>
+          </div>
+          <div class="pager">
+            <button class="btn-pager" disabled><i class='bx bx-chevron-left'></i> Prev</button>
+            <span class="page-info">1 - 10</span>
+            <button class="btn-pager">Next <i class='bx bx-chevron-right'></i></button>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <div class="tickets-list">
+            <!-- Card 1 -->
+            <article class="ticket-card">
+              <header class="tcard-head">
+                <a class="ticket-id" href="{{ route('ticket') }}">#TKT-1245</a>
+                <div class="badges">
+                  <span class="chip chip-high">High Priority</span>
+                  <span class="status status-open">Open</span>
+                </div>
+              </header>
+              <div class="tcard-body">
+                <h4 class="t-subject">Cannot Access Email Account</h4>
+                <p class="t-desc">I've been unable to log into my email since this morning. Getting "Invalid credentials" error even though I'm using the correct password.</p>
+              </div>
+              <footer class="tcard-foot">
+                <span class="meta">2 hours ago</span>
+                <span class="dot">•</span>
+                <span class="meta">Assigned to Prince Remo</span>
+                <span class="dot">•</span>
+                <span class="meta">Category: Email</span>
+                <div class="row-actions">
+                  <a class="action" href="{{ route('ticket') }}" title="View"><i class='bx bx-show'></i></a>
+                </div>
+              </footer>
+            </article>
+
+            <!-- Card 2 -->
+            <article class="ticket-card">
+              <header class="tcard-head">
+                <a class="ticket-id" href="{{ route('ticket') }}">#TKT-1243</a>
+                <div class="badges">
+                  <span class="chip chip-medium">Medium Priority</span>
+                  <span class="status status-progress">In Progress</span>
+                </div>
+              </header>
+              <div class="tcard-body">
+                <h4 class="t-subject">Printer Not Working in Office 3A</h4>
+                <p class="t-desc">The printer keeps showing "Paper Jam" error but there's no paper stuck. Already tried restarting it twice.</p>
+              </div>
+              <footer class="tcard-foot">
+                <span class="meta">2 hours ago</span>
+                <span class="dot">•</span>
+                <span class="meta">Unassigned</span>
+                <span class="dot">•</span>
+                <span class="meta">Category: Hardware</span>
+                <div class="row-actions">
+                  <a class="action" href="{{ route('ticket') }}" title="View"><i class='bx bx-show'></i></a>
+                </div>
+              </footer>
+            </article>
+
+            <!-- Card 3 -->
+            <article class="ticket-card">
+              <header class="tcard-head">
+                <a class="ticket-id" href="{{ route('ticket') }}">#TKT-1240</a>
+                <div class="badges">
+                  <span class="chip chip-low">Low Priority</span>
+                  <span class="status status-resolved">Resolved</span>
+                </div>
+              </header>
+              <div class="tcard-body">
+                <h4 class="t-subject">Request: Adobe Photoshop Installation</h4>
+                <p class="t-desc">Need Adobe Photoshop installed on my workstation for the upcoming marketing campaign project.</p>
+              </div>
+              <footer class="tcard-foot">
+                <span class="meta">3 days ago</span>
+                <span class="dot">•</span>
+                <span class="meta">Assigned to Municht Esquivel</span>
+                <span class="dot">•</span>
+                <span class="meta">Category: Software</span>
+                <div class="row-actions">
+                  <a class="action" href="{{ route('ticket') }}" title="View"><i class='bx bx-show'></i></a>
+                </div>
+              </footer>
+            </article>
+          </div>
+        </div>
+
+        <div class="panel-foot">
+          <div class="pager">
+            <button class="btn-pager" disabled><i class='bx bx-chevron-left'></i> Prev</button>
+            <span class="page-info">1 - 10 of 48</span>
+            <button class="btn-pager">Next <i class='bx bx-chevron-right'></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Empty state (hidden when there are cards) -->
+      <section class="empty-state" hidden>
+        <div class="empty-card">
+          <i class='bx bx-folder-open'></i>
+          <h3>No tickets found</h3>
+          <p class="muted">Try adjusting filters or create a new ticket.</p>
+          <a class="btn-primary" href="{{ route('create-ticket') }}"><i class='bx bx-plus'></i> Create Ticket</a>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <script src="assets/js/components/sidebar.js"></script>
+</body>
+</html>
