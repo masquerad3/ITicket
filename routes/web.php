@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => view('pages.login'))->name('login');
 
 Route::get('/dashboard', fn () => view('pages.dashboard'))->name('dashboard');
+
 Route::get('/tickets', fn () => view('pages.tickets'))->name('tickets');
 Route::get('/ticket', fn () => view('pages.ticket'))->name('ticket');
 Route::get('/create-ticket', fn () => view('pages.create-ticket'))->name('create-ticket');
