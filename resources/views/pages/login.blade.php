@@ -40,6 +40,17 @@
         <form id="loginForm" method="POST" action="{{ route('login.post') }}" novalidate>
           @csrf
 
+          {{-- Display validation errors --}}
+          @if ($errors->any())
+            <div class="error-box" role="alert">
+              <ul>
+                @foreach ($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+            </div>
+          @endif
+
           <!-- Email -->
           <div class="form-row">
             <label for="email">Email</label>
@@ -53,7 +64,7 @@
           <div class="form-row">
             <label for="password">Password</label>
             <div class="input-box">
-              <i class='bx bxs-lock'></i>
+              <i class='bx bxs-lock' ></i>
               <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
               <button type="button" class="toggle-pw">
                 <i class='bx bx-show'></i>

@@ -84,7 +84,10 @@
         </div>
         <div class="page-header-actions">
           <button class="btn-outlined" id="openPwModal"><i class='bx bx-lock'></i> Change Password</button>
-          <button class="btn-danger" id="logoutBtn"><i class='bx bx-log-out'></i> Logout</button>
+          <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button class="btn-danger" id="logoutBtn" type="submit"><i class='bx bx-log-out'></i>Logout</button>
+          </form>
         </div>
       </header>
 

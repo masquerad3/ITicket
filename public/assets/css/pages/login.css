@@ -76,7 +76,7 @@
   color: #7a6fb3;
   font-size: 1.2rem;
 }
-.form-row .input-box #username, #password {
+.form-row .input-box #email, #password {
   height: 48px;
   border: none;
   padding: 0 16px;

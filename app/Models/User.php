@@ -21,6 +21,9 @@ class User extends Authenticatable
     // user_id is an int
     protected $keyType = 'int';
 
+    // If your USERS table has created_at/updated_at, keep this true (default)
+    public $timestamps = true;
+
     // Allow mass assignment for these (optional, used for Model::create)
     protected $fillable = [
         'first_name',
