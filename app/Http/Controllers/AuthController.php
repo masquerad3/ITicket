@@ -87,7 +87,7 @@ class AuthController extends Controller
         $row = $rows[0] ?? null;
 
         if (!$row) {
-            return redirect()->route('login.show')->with('status', 'Account created. Please log in.');
+            return redirect()->route('login')->with('status', 'Account created. Please log in.');
         }
 
         $user = User::findOrFail($row->user_id);
@@ -104,6 +104,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login.show');
+        return redirect()->route('login');
     }
 }

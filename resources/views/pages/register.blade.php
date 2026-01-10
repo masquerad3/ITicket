@@ -51,7 +51,7 @@
   </form>
 
   <p>
-    Already have an account? <a href="{{ route('login.show') }}">Log in</a>
+    Already have an account? <a href="{{ route('login') }}">Log in</a>
   </p>
 
 </body>

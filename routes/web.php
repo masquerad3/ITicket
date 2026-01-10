@@ -3,11 +3,11 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('login.show'));
+Route::get('/', fn () => redirect()->route('login'));
 
 // Guest-only (not logged in)
 Route::middleware('guest')->group(function () {
-    Route::get('/login', fn () => view('pages.login'))->name('login.show');
+    Route::get('/login', fn () => view('pages.login'))->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register.show');
