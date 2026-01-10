@@ -37,21 +37,23 @@
         <h2>Log In</h2>
         <p>Enter your credentials to access your account</p>
         
-        <form id="loginForm" novalidate>
-          <!-- Username -->
+        <form id="loginForm" method="POST" action="{{ route('login.post') }}" novalidate>
+          @csrf
+
+          <!-- Email -->
           <div class="form-row">
-            <label for="username">Username</label>
+            <label for="email">Email</label>
             <div class="input-box">
               <i class='bx bxs-user'></i>
-              <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required />
+              <input type="email" id="email" name="email" placeholder="Enter your email" autocomplete="email" required />
             </div>
           </div>
-          
+
           <!-- Password -->
           <div class="form-row">
             <label for="password">Password</label>
             <div class="input-box">
-              <i class='bx bxs-lock' ></i>
+              <i class='bx bxs-lock'></i>
               <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
               <button type="button" class="toggle-pw">
                 <i class='bx bx-show'></i>
@@ -71,9 +73,8 @@
 
           <!-- Sign-up Link -->
           <div class="signup-link">
-            Don’t have an account? <a href="#">Sign up</a>
+            Don’t have an account? <a href="{{ route('register.show') }}">Sign up</a>
           </div>
-
         </form>
       </div>
     </div>
