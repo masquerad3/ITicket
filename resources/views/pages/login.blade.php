@@ -22,7 +22,7 @@
     <div class="left-panel">
       <div class="inner">
         <div class="logo">
-          <p>[logo]</p>
+          <img src="assets/img/logo.png" alt="ITicket" class="logo-img">
         </div>
         <div class="text-content">
           <h1>Welcome to <strong>ITicket</strong></h1>

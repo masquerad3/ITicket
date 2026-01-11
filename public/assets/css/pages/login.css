@@ -21,6 +21,12 @@
   height: 100%;
 }
 
+.page .left-panel .logo .logo-img {
+  width: 160px;
+  height: auto;
+  display: block;
+}
+
 .page .right-panel {
   background-color: white;
 }
