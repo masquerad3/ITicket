@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -65,5 +67,45 @@ class ProfileController extends Controller
 
       return back()->withErrors(['error' => 'Could not update profile.'])->withInput();
     }
+  }
+
+  public function updatePassword(Request $request)
+  {
+    $user = auth()->user();
+
+    if ($user === null) {
+      abort(403);
+    }
+
+    $request->validate([
+      'current_password' => ['required', 'string'],
+      'password' => ['required', 'string', 'min:6', 'confirmed'],
+    ]);
+
+    // Verify the current password matches what is in the DB
+    $currentPasswordOk = Hash::check($request->input('current_password'), $user->password_hash);
+
+    if (!$currentPasswordOk) {
+      throw ValidationException::withMessages([
+        'current_password' => 'Current password is incorrect.',
+      ]);
+    }
+
+    $newHash = Hash::make($request->input('password'));
+
+    DB::select(
+      'EXEC dbo.sp_update_user_password @user_id = ?, @password_hash = ?',
+      [
+        $user->user_id,
+        $newHash,
+      ]
+    );
+
+    // Optional: refresh model so auth()->user() has latest values
+    $user->refresh();
+
+    return redirect()
+      ->route('profile')
+      ->with('status', 'Password updated successfully.');
   }
 }

@@ -6,7 +6,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_create_user
   @last_name      NVARCHAR(50),
   @email          NVARCHAR(50),
   @contact        NVARCHAR(15),
-  @password_hash  NVARCHAR(100),
+  @password_hash  NVARCHAR(255),
   @role           NVARCHAR(20) = 'user'
 AS
 BEGIN

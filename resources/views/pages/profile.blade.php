@@ -189,16 +189,90 @@
             </div>
 
             <div class="form-actions">
-              <button class="btn-outlined" type="button">Cancel</button>
               <button class="btn-primary" type="submit">Save Changes</button>
             </div>
           </form>
         </section>
       </section>
     </main>
+  </div>
 
+  <!-- Change Password Modal -->
+  <div class="modal-backdrop" id="pwModalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pwModalTitle">
+      <div class="modal-header">
+        <h3 id="pwModalTitle">Change Password</h3>
+        <button class="modal-close" type="button" id="closePwModal" aria-label="Close">&times;</button>
+      </div>
+
+      <form method="POST" action="{{ route('profile.password.update') }}">
+        @csrf
+
+        <div class="modal-body">
+          <div class="form-grid" style="grid-template-columns: 1fr;">
+            <div class="field">
+              <label for="current_password">Current Password</label>
+              <input id="current_password" name="current_password" type="password" required>
+            </div>
+
+            <div class="field">
+              <label for="password">New Password</label>
+              <input id="password" name="password" type="password" required>
+              <small class="hint">Minimum 8 characters.</small>
+            </div>
+
+            <div class="field">
+              <label for="password_confirmation">Confirm New Password</label>
+              <input id="password_confirmation" name="password_confirmation" type="password" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-outlined" type="button" id="cancelPwModal">Cancel</button>
+          <button class="btn-primary" type="submit">Update Password</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="assets/js/components/sidebar.js"></script>
+  <script>
+    (function () {
+      var openBtn = document.getElementById('openPwModal');
+      var backdrop = document.getElementById('pwModalBackdrop');
+      var closeBtn = document.getElementById('closePwModal');
+      var cancelBtn = document.getElementById('cancelPwModal');
+
+      function openModal() {
+        if (!backdrop) return;
+        backdrop.classList.add('is-open');
+        backdrop.setAttribute('aria-hidden', 'false');
+
+        var firstInput = document.getElementById('current_password');
+        if (firstInput) firstInput.focus();
+      }
+
+      function closeModal() {
+        if (!backdrop) return;
+        backdrop.classList.remove('is-open');
+        backdrop.setAttribute('aria-hidden', 'true');
+      }
+
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+      if (backdrop) {
+        backdrop.addEventListener('click', function (e) {
+          if (e.target === backdrop) closeModal();
+        });
+      }
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+      });
+    })();
+  </script>
 </body>
 </html>

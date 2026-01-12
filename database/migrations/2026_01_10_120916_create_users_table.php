@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('last_name', 50);
             $table->string('email', 50)->unique(); // unique(): no two rows can have the same value in this column.
             $table->string('contact', 15)->unique();
-            $table->string('password_hash', 100); // Store hashed passwords, not plain text. (Laravel usually stores bcrypt hashes here).
+            $table->string('password_hash', 255); // Store hashed passwords, not plain text. (Laravel usually stores bcrypt hashes here).
             $table->string('role', 20)->default('user'); // Default role is 'user'. 
             $table->boolean('is_active')->default(true); // Creates a true/false flag (SQL Server uses BIT). default true. 
             $table->timestamps(); // Creates two columns automatically: created_at, updated_at
