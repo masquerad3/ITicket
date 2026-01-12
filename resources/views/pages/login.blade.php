@@ -84,7 +84,7 @@
 
           <!-- Sign-up Link -->
           <div class="signup-link">
-            Don’t have an account? <a href="{{ route('register.show') }}">Sign up</a>
+            Don’t have an account? <a href="{{ route('register') }}">Sign up</a>
           </div>
         </form>
       </div>

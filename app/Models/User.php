@@ -2,29 +2,41 @@
 
 namespace App\Models;
 
+// This is Laravel's base User class for authentication.
+// It already includes features needed for login/session (it implements "Authenticatable").
 use Illuminate\Foundation\Auth\User as Authenticatable;
+// Allows this user to receive notifications (email notifications, database notifications, etc.)
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable; // Adds notification-related methods to the User model
 
-    // SQL Server table name
+    // Tell Laravel which DB table this model uses.
+    // Laravel default would be "users" (lowercase), but your SQL Server table is "USERS".
     protected $table = 'USERS';
 
-    // Primary key column name
+    // Tell Laravel the primary key column name.
+    // Laravel default is "id", but your table uses "user_id".
     protected $primaryKey = 'user_id';
 
-    // If your key is auto-incrementing (it is)
+    // Tells Laravel the primary key uses auto-increment (1,2,3,...).
+    // Most SQL Server identity columns are incrementing.
     public $incrementing = true;
 
-    // user_id is an int
+    // Primary key data type.
+    // Laravel default is string for UUID setups sometimes, but yours is an integer.
     protected $keyType = 'int';
 
-    // If your USERS table has created_at/updated_at, keep this true (default)
+    // If true: Laravel expects created_at and updated_at columns and will automatically write them.
+    // If your SQL Server table has these columns, keep this true.
+    // If your table does NOT have them, set this to false to avoid SQL errors.
     public $timestamps = true;
 
-    // Allow mass assignment for these (optional, used for Model::create)
+    // "Mass assignment" fields:
+    // If you ever do User::create([...]) or $user->fill([...]),
+    // Laravel will ONLY allow these fields to be set in bulk.
+    // This helps prevent security issues (someone setting fields you didn't expect).
     protected $fillable = [
         'first_name',
         'last_name',
@@ -35,15 +47,21 @@ class User extends Authenticatable
         'is_active',
     ];
 
-    // Hide password hash in arrays/json
+    // Fields hidden when the model is converted to an array/JSON.
+    // Example: return response()->json(auth()->user());
+    // password_hash will not be included in the JSON output.
     protected $hidden = [
         'password_hash',
     ];
 
     /**
-     * IMPORTANT:
+     * IMPORTANT FOR AUTH:
+     *
      * Laravel Auth expects the password column to be named "password".
-     * This tells Laravel to use "password_hash" instead when checking credentials.
+     * But your database uses "password_hash".
+     *
+     * This method tells Laravel:
+     * "When you need the user's password for authentication, use password_hash."
      */
     public function getAuthPassword()
     {
