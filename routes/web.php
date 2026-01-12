@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\AuthController; // We need this so we can use AuthController methods (login/register/logout)
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route; // Route lets us define website URLs like /login, /register, etc.
 
 /*
@@ -67,6 +68,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/knowledge-article', fn () => view('pages.knowledge-article'))->name('knowledge-article');
 
     Route::get('/contact', fn () => view('pages.contact'))->name('contact');
-    Route::get('/profile', fn () => view('pages.profile'))->name('profile');
+
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
     Route::get('/settings', fn () => view('pages.settings'))->name('settings');
 });

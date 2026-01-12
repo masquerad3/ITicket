@@ -19,6 +19,28 @@
 </head>
 
 <body>
+  @php
+    // Currently logged-in user
+    $u = auth()->user();
+
+    $first_initial = '';
+    $last_initial = '';
+
+    if ($u !== null && !empty($u->first_name)) {
+        $first_initial = strtoupper(substr($u->first_name, 0, 1));
+    }
+
+    if ($u !== null && !empty($u->last_name)) {
+        $last_initial = strtoupper(substr($u->last_name, 0, 1));
+    }
+
+    $initials = $first_initial . $last_initial;
+
+    if ($initials === '') {
+        $initials = 'U';
+    }
+  @endphp
+
   <div class="page">
 
     <!-- Topbar -->
@@ -55,29 +77,48 @@
           <button class="btn-outlined" id="openPwModal"><i class='bx bx-lock'></i> Change Password</button>
           <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button class="btn-danger" id="logoutBtn" type="submit"><i class='bx bx-log-out'></i>Logout</button>
+            <button class="btn-danger" id="logoutBtn" type="submit"><i class='bx bx-log-out'></i>   Logout</button>
           </form>
         </div>
       </header>
+
+      <!-- Status Messages -->
+      @if (session('status'))
+        <div class="panel" role="status" style="border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;">
+          {{ session('status') }}
+        </div>
+      @endif
+
+      <!-- Error Messages -->
+      @if ($errors->any())
+        <div class="panel" role="alert" style="border:1px solid #fecaca;background:#fef2f2;color:#991b1b;">
+          <ul>
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
 
       <section class="profile-grid">
         <!-- Left: Summary card -->
         <aside class="profile-card">
           <div class="profile-avatar">
-            <div class="avatar-lg">SM</div>
+            <div class="avatar-lg">{{ $initials }}</div>
             <button class="btn-outlined small" type="button">
               <i class='bx bx-upload'></i> Upload Photo
             </button>
           </div>
 
           <div class="profile-info">
-            <h3 class="name">Samuel Muralidharan</h3>
-            <p class="role">Non-IT • Student Affairs</p>
-            <p class="email">samuel.muralidharan@example.com</p>
+            <h3 class="name">{{ $u?->first_name }} {{ $u?->last_name }}</h3>
+            <p class="role">{{ $u?->role }}</p>
+            <p class="email">{{ $u?->email }}</p>
           </div>
 
           <div class="divider"></div>
 
+          <!-- Quick stats (currently placeholder values) -->
           <div class="quick-stats">
             <div class="qstat">
               <span class="qstat-val">3</span>
@@ -103,26 +144,33 @@
 
         <!-- Right: Editable form -->
         <section class="profile-form panel">
-          <form id="profileForm" method="POST" novalidate>
+          <form id="profileForm" method="POST" action="{{ route('profile.update') }}" novalidate>
             @csrf
 
             <h3 class="panel-title">Personal Information</h3>
             <div class="form-grid">
               <div class="field">
-                <label for="fullName">Full Name</label>
-                <input id="fullName" name="fullName" type="text" placeholder="Full name" value="Samuel Muralidharan" required>
+                <label for="first_name">First Name</label>
+                <!-- old('first_name', $u?->first_name) means:
+                First choice: use the value the user just typed last time (old('first_name'))
+                If there is no old input: fall back to the current value from the database ($u->first_name) -->
+                <input id="first_name" name="first_name" type="text" placeholder="First name" 
+                value="{{ old('first_name', $u?->first_name) }}" required>
               </div>
               <div class="field">
-                <label for="username">Username</label>
-                <input id="username" name="username" type="text" placeholder="Username" value="s.muralidharan" required>
-              </div>
-              <div class="field">
-                <label for="department">Department</label>
-                <input id="department" name="department" type="text" placeholder="Department" value="Student Affairs">
+                <label for="last_name">Last Name</label>
+                <input id="last_name" name="last_name" type="text" placeholder="Last name" 
+                value="{{ old('last_name', $u?->last_name) }}" required>
               </div>
               <div class="field">
                 <label for="role">Role</label>
-                <input id="role" name="role" type="text" value="Non-IT" readonly>
+                <input id="role" name="role" type="text" 
+                value="{{ $u?->role }}" readonly>
+              </div>
+              <div class="field">
+                <label for="is_active">Status</label>
+                <input id="is_active" name="is_active" type="text" 
+                value="{{ (int)($u?->is_active ?? 1) === 1 ? 'Active' : 'Inactive' }}" readonly>
               </div>
             </div>
 
@@ -130,11 +178,13 @@
             <div class="form-grid">
               <div class="field">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" placeholder="Email" value="samuel.muralidharan@example.com" required>
+                <input id="email" name="email" type="email" placeholder="Email" 
+                value="{{ old('email', $u?->email) }}" required>
               </div>
               <div class="field">
-                <label for="phone">Phone</label>
-                <input id="phone" name="phone" type="tel" placeholder="+63 900 000 0000">
+                <label for="contact">Phone</label>
+                <input id="contact" name="contact" type="text" placeholder="Contact Number"
+                value="{{ old('contact', $u?->contact) }}" required>
               </div>
             </div>
 
