@@ -7,12 +7,12 @@
   <title>ITicket - Profile</title>
  
   <!-- Global/base (reset, utilities, shared patterns) -->
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
   <!-- Shared component styles -->
-  <link rel="stylesheet" href="assets/css/components/topbar.css">
-  <link rel="stylesheet" href="assets/css/components/sidebar.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/components/topbar.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/components/sidebar.css') }}">
   <!-- Page styles -->
-  <link rel="stylesheet" href="assets/css/pages/profile.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/pages/profile.css') }}">
   
   <!-- Icons -->
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
@@ -34,44 +34,13 @@
           <i class='bx bx-bell'></i>
         </button>
         
-        <div class="profile-chip">
-          <div class="avatar">SM</div>
-          
-          <div class="user-meta">
-            <p class="user-name">Samuel Muralidharan</p>
-            <p class="user-role">Non-IT</p>
-          </div>
-        </div>
+        <!-- Profile chip -->
+        @include('partials.profile-chip')
       </div>
     </header>
 
     <!-- Slide-out Sidebar -->
-    <aside class="slide-menu">
-      <div class="menu-header">
-        <button class="menu-close"><i class='bx bxs-chevron-right-circle'></i></button>
-      </div>
-
-      <div class="menu-content">
-        <nav class="menu-group">
-          <h4 class="group-title">Main Menu</h4>
-          <a class="menu-link" href="{{ route('dashboard') }}"><i class='bx bx-home'></i> Dashboard</a>
-          <a class="menu-link" href="{{ route('tickets') }}"><i class='bx bx-list-check'></i> My Ticket</a>
-          <a class="menu-link" href="{{ route('create-ticket') }}"><i class='bx bx-plus-circle'></i> Create Ticket</a>
-        </nav>
-        <nav class="menu-group">
-          <h4 class="group-title">Support</h4>
-          <a class="menu-link" href="{{ route('knowledge') }}"><i class='bx bx-book'></i> Knowledge Base</a>
-          <a class="menu-link" href=""><i class='bx bx-chat'></i> Live Chat</a>
-          <a class="menu-link" href="{{ route('contact') }}"><i class='bx bx-envelope'></i> Contact</a>
-        </nav>
-        <nav class="menu-group">
-          <h4 class="group-title">Account</h4>
-          <a class="menu-link active" href="{{ route('profile') }}"><i class='bx bx-user-circle'></i> Profile</a>
-          <a class="menu-link" href="{{ route('settings') }}"><i class='bx bx-cog'></i> Settings</a>
-        </nav>
-      </div>
-      
-    </aside>
+    @include('partials.sidebar')
     <!-- Overlay backdrop -->
     <div class="backdrop"></div>
 
@@ -134,7 +103,9 @@
 
         <!-- Right: Editable form -->
         <section class="profile-form panel">
-          <form id="profileForm" novalidate>
+          <form id="profileForm" method="POST" novalidate>
+            @csrf
+
             <h3 class="panel-title">Personal Information</h3>
             <div class="form-grid">
               <div class="field">

@@ -7,11 +7,11 @@
   <title>ITicket - Sign Up</title>
 
   <!-- Global/base -->
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
   <!-- Base auth layout (same as login) -->
-  <link rel="stylesheet" href="assets/css/pages/login.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/pages/login.css') }}">
   <!-- Register-specific tweaks -->
-  <link rel="stylesheet" href="assets/css/pages/register.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/pages/register.css') }}">
 
   <!-- Icons -->
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>

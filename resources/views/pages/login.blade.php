@@ -7,9 +7,9 @@
   <title>ITicket - Log In</title>
 
   <!-- Global/base (reset, utilities, shared patterns) -->
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
   <!-- Page styles -->
-  <link rel="stylesheet" href="assets/css/pages/login.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/pages/login.css') }}">
   
   <!-- Icons -->
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
