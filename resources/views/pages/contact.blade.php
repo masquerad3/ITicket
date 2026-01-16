@@ -44,7 +44,7 @@
           <p>Reach us by chat, phone, or send a quick message. For issues needing tracking, create a ticket.</p>
         </div>
         <div class="hero-actions">
-          <a class="btn-white" href="{{ route('create-ticket') }}"><i class='bx bx-plus'></i> Create Ticket</a>
+          <a class="btn-white" href="{{ route('tickets.create') }}"><i class='bx bx-plus'></i> Create Ticket</a>
         </div>
       </section>
 

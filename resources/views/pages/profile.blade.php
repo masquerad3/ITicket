@@ -146,8 +146,8 @@
           <div class="divider"></div>
 
           <div class="actions">
-            <a class="btn-link" href="{{ route('tickets') }}"><i class='bx bx-list-check'></i> View My Tickets</a>
-            <a class="btn-link" href="{{ route('create-ticket') }}"><i class='bx bx-plus-circle'></i> Create Ticket</a>
+            <a class="btn-link" href="{{ route('tickets.index') }}"><i class='bx bx-list-check'></i> View My Tickets</a>
+            <a class="btn-link" href="{{ route('tickets.create') }}"><i class='bx bx-plus-circle'></i> Create Ticket</a>
           </div>
         </aside>
 

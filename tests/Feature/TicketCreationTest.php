@@ -35,7 +35,7 @@ class TicketCreationTest extends TestCase
                 ],
             ]);
 
-        $response->assertRedirect(route('tickets'));
+        $response->assertRedirect(route('tickets.index'));
 
         $this->assertSame(1, Ticket::count());
 

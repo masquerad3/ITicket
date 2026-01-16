@@ -137,7 +137,7 @@
         <details class="ts-item">
           <summary><i class='bx bx-shield'></i> I no longer have my MFA device</summary>
           <div class="ts-body">
-            Use the backup method (SMS). If none available, <a href="{{ route('create-ticket') }}">create a ticket</a> for identity verification.
+            Use the backup method (SMS). If none available, <a href="{{ route('tickets.create') }}">create a ticket</a> for identity verification.
           </div>
         </details>
         <details class="ts-item">
@@ -174,7 +174,7 @@
           <div class="feedback-actions">
             <button class="btn-outlined" id="fbYes"><i class='bx bx-like'></i> Yes</button>
             <button class="btn-outlined" id="fbNo"><i class='bx bx-dislike'></i> No</button>
-            <a class="btn-primary" href="{{ route('create-ticket') }}"><i class='bx bx-help-circle'></i> Still need help? Create a ticket</a>
+            <a class="btn-primary" href="{{ route('tickets.create') }}"><i class='bx bx-help-circle'></i> Still need help? Create a ticket</a>
           </div>
           <p class="muted small" id="fbMsg" aria-live="polite"></p>
         </div>

@@ -45,7 +45,7 @@
           <p class="muted">Tell us what you need help with. The more details, the faster we can assist.</p>
         </div>
         <div class="page-header-actions">
-          <a class="btn-outlined" href="{{ route('tickets') }}"><i class='bx bx-left-arrow-alt'></i> Back to Tickets</a>
+          <a class="btn-outlined" href="{{ route('tickets.index') }}"><i class='bx bx-left-arrow-alt'></i> Back to Tickets</a>
         </div>
       </header>
 

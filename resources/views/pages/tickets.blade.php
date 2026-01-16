@@ -48,11 +48,15 @@
       <!-- Header + CTA -->
       <header class="page-header">
         <div class="page-header-left">
-          <h2>My Tickets</h2>
-          <p class="muted">View and manage all your submitted tickets</p>
+            @php
+              $role = strtolower((string) (auth()->user()?->role ?? 'user'));
+              $is_staff = in_array($role, ['admin', 'it'], true);
+            @endphp
+            <h2>{{ $is_staff ? 'All Tickets' : 'My Tickets' }}</h2>
+            <p class="muted">{{ $is_staff ? 'View and manage all submitted tickets' : 'View and manage all your submitted tickets' }}</p>
         </div>
         <div class="page-header-actions">
-          <a class="btn-primary header-cta" href="{{ route('create-ticket') }}"><i class='bx bx-plus'></i> New Ticket</a>
+          <a class="btn-primary header-cta" href="{{ route('tickets.create') }}"><i class='bx bx-plus'></i> New Ticket</a>
         </div>
       </header>
 
@@ -154,7 +158,7 @@
 
                 <article class="ticket-card">
                   <header class="tcard-head">
-                    <a class="ticket-id" href="{{ route('ticket') }}">{{ $displayId }}</a>
+                    <a class="ticket-id" href="{{ route('tickets.show', $t) }}">{{ $displayId }}</a>
                     <div class="badges">
                       <span @class([
                         'chip',
@@ -178,11 +182,13 @@
                   <footer class="tcard-foot">
                     <span class="meta">{{ optional($t->created_at)->diffForHumans() }}</span>
                     <span class="dot">•</span>
-                    <span class="meta">Unassigned</span>
+                    <span class="meta">
+                      {{ $t->assignee?->first_name ? ($t->assignee->first_name.' '.$t->assignee->last_name) : ($t->assigned_to ? 'User #'.$t->assigned_to : 'Unassigned') }}
+                    </span>
                     <span class="dot">•</span>
                     <span class="meta">Category: {{ $t->category }}</span>
                     <div class="row-actions">
-                      <a class="action" href="{{ route('ticket') }}" title="View"><i class='bx bx-show'></i></a>
+                      <a class="action" href="{{ route('tickets.show', $t) }}" title="View"><i class='bx bx-show'></i></a>
                     </div>
                   </footer>
                 </article>
@@ -206,7 +212,7 @@
           <i class='bx bx-folder-open'></i>
           <h3>No tickets found</h3>
           <p class="muted">Try adjusting filters or create a new ticket.</p>
-          <a class="btn-primary" href="{{ route('create-ticket') }}"><i class='bx bx-plus'></i> Create Ticket</a>
+          <a class="btn-primary" href="{{ route('tickets.create') }}"><i class='bx bx-plus'></i> Create Ticket</a>
         </div>
       </section>
     </main>

@@ -44,7 +44,7 @@
             <h2>Knowledge Base</h2>
             <p class="muted-light">Search guides and troubleshooting articles.</p>
           </div>
-          <a class="hero-cta" href="{{ route('create-ticket') }}">
+          <a class="hero-cta" href="{{ route('tickets.create') }}">
             <i class='bx bx-plus'></i> Create Ticket
           </a>
 

@@ -61,10 +61,16 @@ Route::middleware('auth')->group(function () {
     // If you’re NOT logged in, Laravel redirects you to /login.
     Route::get('/dashboard', fn () => view('pages.dashboard'))->name('dashboard');
  
-    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets');
-    Route::get('/ticket', fn () => view('pages.ticket'))->name('ticket');
-    Route::get('/create-ticket', [TicketController::class, 'create'])->name('create-ticket');
+    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+    Route::get('/ticket', fn () => redirect()->route('tickets.index'))->name('ticket');
+    Route::get('/create-ticket', [TicketController::class, 'create'])->name('tickets.create');
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+
+    Route::middleware('role:admin,it')->group(function () {
+        Route::post('/tickets/{ticket}/assign-to-me', [TicketController::class, 'assignToMe'])->name('tickets.assignToMe');
+        Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.updateStatus');
+    });
 
     Route::get('/knowledge', fn () => view('pages.knowledge'))->name('knowledge');
     Route::get('/knowledge-article', fn () => view('pages.knowledge-article'))->name('knowledge-article');

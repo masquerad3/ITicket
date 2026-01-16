@@ -51,7 +51,7 @@
           <h2>Welcome back, <strong>Samuel</strong>!</h1>
           <p>Need help with an IT issue? Submit a ticket and we'll get right on it.</p>
         </div>
-        <a class="new-ticket-btn" href="{{ route('create-ticket') }}">
+        <a class="new-ticket-btn" href="{{ route('tickets.create') }}">
           <i class='bx bx-plus'></i> 
           <p>Create New Ticket</p>
         </a>
@@ -81,7 +81,7 @@
       <section class="my-tickets">
         <div class="panel-header">
           <h3>My Recent Tickets</h3>
-          <a href="{{ route('tickets') }}">View All</a>
+          <a href="{{ route('tickets.index') }}">View All</a>
         </div>
 
         <div class="ticket-card">

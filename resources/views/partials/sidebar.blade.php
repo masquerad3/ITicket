@@ -10,8 +10,8 @@
       <h4 class="group-title">Main Menu</h4>
       <!-- Use the @class directive to conditionally add the 'active' class based on the current route -->
       <a @class(['menu-link', 'active' => request()->routeIs('dashboard')]) href="{{ route('dashboard') }}"><i class='bx bx-home'></i> Dashboard</a>
-      <a @class(['menu-link', 'active' => request()->routeIs('tickets') || request()->routeIs('ticket')]) href="{{ route('tickets') }}"><i class='bx bx-list-check'></i> My Ticket</a>
-      <a @class(['menu-link', 'active' => request()->routeIs('create-ticket')]) href="{{ route('create-ticket') }}"><i class='bx bx-plus-circle'></i> Create Ticket</a>
+      <a @class(['menu-link', 'active' => request()->routeIs('tickets.index') || request()->routeIs('tickets.show') || request()->routeIs('ticket')]) href="{{ route('tickets.index') }}"><i class='bx bx-list-check'></i> My Ticket</a>
+      <a @class(['menu-link', 'active' => request()->routeIs('tickets.create')]) href="{{ route('tickets.create') }}"><i class='bx bx-plus-circle'></i> Create Ticket</a>
     </nav>
 
     <nav class="menu-group">

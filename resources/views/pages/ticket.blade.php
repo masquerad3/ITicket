@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ITicket - Ticket #TKT-1245</title>
+  <title>ITicket - Ticket #TKT-{{ $ticket->ticket_id ?? '' }}</title>
 
   <!-- Global/base -->
   <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
@@ -17,6 +17,39 @@
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 </head>
 <body>
+  @php
+    $u = auth()->user();
+
+    $role = strtolower((string) ($u?->role ?? 'user'));
+    $is_staff = in_array($role, ['admin', 'it'], true);
+
+    $requester = $ticket->requester ?? $u;
+    $assignee = $ticket->assignee;
+
+    $first = '';
+    $last = '';
+    if ($requester !== null && !empty($requester->first_name)) $first = strtoupper(substr($requester->first_name, 0, 1));
+    if ($requester !== null && !empty($requester->last_name)) $last = strtoupper(substr($requester->last_name, 0, 1));
+    $initials = $first . $last;
+    if ($initials === '') $initials = 'U';
+
+    $assigneeInitials = '—';
+    if ($assignee !== null) {
+      $af = !empty($assignee->first_name) ? strtoupper(substr($assignee->first_name, 0, 1)) : '';
+      $al = !empty($assignee->last_name) ? strtoupper(substr($assignee->last_name, 0, 1)) : '';
+      $assigneeInitials = trim($af . $al) !== '' ? ($af . $al) : 'IT';
+    }
+
+    $displayId = '#TKT-' . ($ticket->ticket_id ?? '');
+
+    $statusLabel = 'Open';
+    if (($ticket->status ?? '') === 'in_progress') $statusLabel = 'In Progress';
+    if (($ticket->status ?? '') === 'resolved') $statusLabel = 'Resolved';
+    if (($ticket->status ?? '') === 'closed') $statusLabel = 'Closed';
+
+    $attachments = $ticket->attachments ?? [];
+    if (!is_array($attachments)) $attachments = [];
+  @endphp
   <div class="page">
     <!-- Topbar -->
     <header class="topbar">
@@ -40,25 +73,58 @@
       <!-- Header band -->
       <section class="ticket-toolbar">
         <div class="tt-left">
-          <h1>Cannot Access Email Account</h1>
+          <h1>{{ $ticket->subject }}</h1>
           <div class="tt-meta">
-            <a class="ticket-id" href="#">#TKT-1245</a>
-            <span class="status status-progress">In Progress</span>
-            <span class="chip chip-high">High</span>
+            <span class="ticket-id">{{ $displayId }}</span>
+            <span @class([
+              'status',
+              'status-open' => ($ticket->status ?? '') === 'open',
+              'status-progress' => ($ticket->status ?? '') === 'in_progress',
+              'status-resolved' => ($ticket->status ?? '') === 'resolved',
+              'status-closed' => ($ticket->status ?? '') === 'closed',
+            ])>{{ $statusLabel }}</span>
+            <span @class([
+              'chip',
+              'chip-high' => ($ticket->priority ?? '') === 'High',
+              'chip-medium' => ($ticket->priority ?? '') === 'Medium',
+              'chip-low' => ($ticket->priority ?? '') === 'Low',
+            ])>{{ $ticket->priority }}</span>
           </div>
         </div>
         <div class="tt-actions">
-          <a class="btn-outlined" href="{{ route('tickets') }}"><i class='bx bx-left-arrow-alt'></i> Back</a>
-          <button class="btn-soft"><i class='bx bx-check-circle'></i> Mark Resolved</button>
-          <button class="btn-primary"><i class='bx bx-reply'></i> Add Reply</button>
+          <a class="btn-outlined" href="{{ route('tickets.index') }}"><i class='bx bx-left-arrow-alt'></i> Back</a>
+
+          @if ($is_staff)
+            @if (($ticket->assigned_to ?? null) === null)
+              <form method="POST" action="{{ route('tickets.assignToMe', $ticket) }}" style="display:inline;">
+                @csrf
+                <button type="submit" class="btn-soft"><i class='bx bx-user-check'></i> Assign to me</button>
+              </form>
+            @endif
+
+            <form method="POST" action="{{ route('tickets.updateStatus', $ticket) }}" style="display:inline;">
+              @csrf
+              @method('PATCH')
+              <input type="hidden" name="status" value="resolved">
+              <button type="submit" class="btn-soft"><i class='bx bx-check-circle'></i> Mark Resolved</button>
+            </form>
+          @endif
+
+          <button class="btn-primary" type="button"><i class='bx bx-reply'></i> Add Reply</button>
         </div>
       </section>
 
+      @if (session('status'))
+        <div class="panel" role="status" style="border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;">
+          {{ session('status') }}
+        </div>
+      @endif
+
       <!-- Info pills -->
       <section class="pill-row">
-        <div class="pill"><i class='bx bx-time-five'></i> Created 2025-06-08 09:42</div>
-        <div class="pill"><i class='bx bx-sync'></i> Updated 2 hours ago</div>
-        <div class="pill"><i class='bx bx-envelope'></i> Email</div>
+        <div class="pill"><i class='bx bx-time-five'></i> Created {{ optional($ticket->created_at)->format('Y-m-d H:i') }}</div>
+        <div class="pill"><i class='bx bx-sync'></i> Updated {{ optional($ticket->updated_at)->diffForHumans() }}</div>
+        <div class="pill"><i class='bx bx-category'></i> {{ $ticket->category }}</div>
         <div class="pill"><i class='bx bx-target-lock'></i> SLA: 4h response</div>
       </section>
 
@@ -71,29 +137,28 @@
           </div>
 
           <div class="panel-body thread">
-            <!-- Timeline event -->
-            <div class="event">
-              <div class="event-dot"></div>
-              <div class="event-card">
-                <p><strong>Status changed</strong> from Open to In Progress by Prince Remo</p>
-                <span class="muted">Today 10:04</span>
-              </div>
-            </div>
-
             <!-- Requester message -->
             <article class="msg requester">
               <div class="msg-aside">
-                <div class="avatar soft">SM</div>
+                <div class="avatar soft">{{ $initials }}</div>
               </div>
               <div class="msg-body">
                 <div class="msg-top">
-                  <strong>Samuel Muralidharan</strong>
-                  <span class="muted">Requester • Today 09:42</span>
+                  <strong>{{ $requester?->first_name }} {{ $requester?->last_name }}</strong>
+                  <span class="muted">Requester • {{ optional($ticket->created_at)->diffForHumans() }}</span>
                 </div>
-                <p>I've been unable to log into my email since this morning. Getting "Invalid credentials" even though I'm using the correct password.</p>
-                <ul class="attachments">
-                  <li><i class='bx bx-file'></i> error-screenshot.png</li>
-                </ul>
+                <p>{{ $ticket->description }}</p>
+
+                @if (count($attachments) > 0)
+                  <ul class="attachments">
+                    @foreach ($attachments as $path)
+                      <li>
+                        <i class='bx bx-file'></i>
+                        <a href="{{ asset('storage/' . $path) }}" target="_blank" rel="noopener">{{ basename($path) }}</a>
+                      </li>
+                    @endforeach
+                  </ul>
+                @endif
               </div>
             </article>
 
@@ -159,10 +224,31 @@
             <div class="panel-head"><h3>Details</h3></div>
             <div class="panel-body details">
               <dl>
-                <div class="row"><dt>Status</dt><dd><span class="status status-progress">In Progress</span></dd></div>
-                <div class="row"><dt>Priority</dt><dd><span class="chip chip-high">High</span></dd></div>
-                <div class="row"><dt>Category</dt><dd>Email</dd></div>
-                <div class="row"><dt>Impact</dt><dd>Cannot Work</dd></div>
+                <div class="row">
+                  <dt>Status</dt>
+                  <dd>
+                    <span @class([
+                      'status',
+                      'status-open' => ($ticket->status ?? '') === 'open',
+                      'status-progress' => ($ticket->status ?? '') === 'in_progress',
+                      'status-resolved' => ($ticket->status ?? '') === 'resolved',
+                      'status-closed' => ($ticket->status ?? '') === 'closed',
+                    ])>{{ $statusLabel }}</span>
+                  </dd>
+                </div>
+                <div class="row">
+                  <dt>Priority</dt>
+                  <dd>
+                    <span @class([
+                      'chip',
+                      'chip-high' => ($ticket->priority ?? '') === 'High',
+                      'chip-medium' => ($ticket->priority ?? '') === 'Medium',
+                      'chip-low' => ($ticket->priority ?? '') === 'Low',
+                    ])>{{ $ticket->priority }}</span>
+                  </dd>
+                </div>
+                <div class="row"><dt>Category</dt><dd>{{ $ticket->category }}</dd></div>
+                <div class="row"><dt>Contact</dt><dd>{{ $ticket->preferred_contact }}</dd></div>
               </dl>
             </div>
           </section>
@@ -172,9 +258,9 @@
             <div class="panel-body people">
               <div class="p-row">
                 <div class="p-who">
-                  <div class="avatar soft">SM</div>
+                  <div class="avatar soft">{{ $initials }}</div>
                   <div>
-                    <strong>Samuel Muralidharan</strong>
+                    <strong>{{ $requester?->first_name }} {{ $requester?->last_name }}</strong>
                     <p class="muted">Requester</p>
                   </div>
                 </div>
@@ -182,9 +268,11 @@
               </div>
               <div class="p-row">
                 <div class="p-who">
-                  <div class="avatar agent">PR</div>
+                  <div class="avatar agent">{{ $assigneeInitials }}</div>
                   <div>
-                    <strong>Prince Remo</strong>
+                    <strong>
+                      {{ $assignee?->first_name ? ($assignee->first_name.' '.$assignee->last_name) : (($ticket->assigned_to ?? null) ? 'User #'.$ticket->assigned_to : 'Unassigned') }}
+                    </strong>
                     <p class="muted">Assignee</p>
                   </div>
                 </div>
@@ -206,8 +294,13 @@
           <section class="panel info">
             <div class="panel-head"><h3>Attachments</h3></div>
             <div class="panel-body files">
-              <a class="file" href="#"><i class='bx bx-file'></i> error-screenshot.png</a>
-              <a class="file" href="#"><i class='bx bx-file'></i> vpn-log.txt</a>
+              @if (count($attachments) > 0)
+                @foreach ($attachments as $path)
+                  <a class="file" href="{{ asset('storage/' . $path) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ basename($path) }}</a>
+                @endforeach
+              @else
+                <p class="muted">No files attached.</p>
+              @endif
               <button class="btn-outlined small"><i class='bx bx-upload'></i> Upload</button>
             </div>
           </section>

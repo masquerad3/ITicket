@@ -3,15 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ticket;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class TicketController extends Controller
 {
+    private function isStaff(): bool
+    {
+        $role = strtolower((string) (auth()->user()?->role ?? 'user'));
+
+        return in_array($role, ['it', 'admin'], true);
+    }
+
     public function index()
     {
-        $tickets = Ticket::query()
-            ->where('user_id', auth()->id())
+        $query = Ticket::query()->with(['assignee', 'requester']);
+
+        if (!$this->isStaff()) {
+            $query->where('user_id', auth()->id());
+        }
+
+        $tickets = $query
             ->latest('created_at')
             ->get();
 
@@ -28,6 +41,66 @@ class TicketController extends Controller
     public function create()
     {
         return view('pages.create-ticket');
+    }
+
+    public function show(Ticket $ticket)
+    {
+        if (!$this->isStaff() && (int) $ticket->user_id !== (int) auth()->id()) {
+            abort(404);
+        }
+
+        $ticket->load(['assignee', 'requester']);
+
+        return view('pages.ticket', compact('ticket'));
+    }
+
+    public function assignToMe(Ticket $ticket): RedirectResponse
+    {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
+        if ($ticket->assigned_to === null) {
+            $ticket->assigned_to = auth()->id();
+            $ticket->assigned_at = now();
+        }
+
+        if ($ticket->status === 'open') {
+            $ticket->status = 'in_progress';
+        }
+
+        $ticket->save();
+
+        return redirect()
+            ->route('tickets.show', $ticket)
+            ->with('status', 'Ticket assigned successfully.');
+    }
+
+    public function updateStatus(Request $request, Ticket $ticket): RedirectResponse
+    {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'status' => ['required', 'string', 'in:open,in_progress,resolved,closed'],
+        ]);
+
+        $ticket->status = $validated['status'];
+
+        if ($ticket->status === 'resolved') {
+            $ticket->resolved_at = now();
+        }
+
+        if ($ticket->status !== 'resolved') {
+            $ticket->resolved_at = null;
+        }
+
+        $ticket->save();
+
+        return redirect()
+            ->route('tickets.show', $ticket)
+            ->with('status', 'Ticket status updated.');
     }
 
     public function store(Request $request)
@@ -68,7 +141,7 @@ class TicketController extends Controller
         }
 
         return redirect()
-            ->route('tickets')
+            ->route('tickets.index')
             ->with('status', 'Ticket submitted successfully.');
     }
 }
