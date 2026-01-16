@@ -54,6 +54,8 @@
 
     $attachments = $ticket->attachments ?? [];
     if (!is_array($attachments)) $attachments = [];
+
+    $messages = $messages ?? collect();
   @endphp
   <div class="page">
     <!-- Topbar -->
@@ -115,7 +117,7 @@
             </form>
           @endif
 
-          <button class="btn-primary" type="button"><i class='bx bx-reply'></i> Add Reply</button>
+          <button id="replyScroll" class="btn-primary" type="button"><i class='bx bx-reply'></i> Add Reply</button>
         </div>
       </section>
 
@@ -159,7 +161,7 @@
                     @foreach ($attachments as $path)
                       <li>
                         <i class='bx bx-file'></i>
-                        <a href="{{ asset('storage/' . $path) }}" target="_blank" rel="noopener">{{ basename($path) }}</a>
+                        <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($path) }}" target="_blank" rel="noopener">{{ basename($path) }}</a>
                       </li>
                     @endforeach
                   </ul>
@@ -167,59 +169,87 @@
               </div>
             </article>
 
-            <!-- Agent reply -->
-            <article class="msg agent">
-              <div class="msg-aside">
-                <div class="avatar agent">PR</div>
-              </div>
-              <div class="msg-body">
-                <div class="msg-top">
-                  <strong>Prince Remo</strong>
-                  <span class="muted">IT Support • Today 10:05</span>
-                </div>
-                <p>Hi Samuel — we are checking the auth logs. Can you confirm if you recently changed your password or MFA device?</p>
-              </div>
-            </article>
+            @if ($messages->count() > 0)
+              @foreach ($messages as $m)
+                @php
+                  $mFirst = $m->user_first_name ?? '';
+                  $mLast = $m->user_last_name ?? '';
 
-            <!-- Internal note -->
-            <article class="note">
-              <div class="note-icon"><i class='bx bx-note'></i></div>
-              <div class="note-body">
-                <div class="note-top">
-                  <strong>Internal note</strong>
-                  <span class="muted">Today 10:10 by Prince Remo</span>
-                </div>
-                <p>User shows multiple failed IMAP logins from home IP. Likely cached password in phone mail app.</p>
-              </div>
-            </article>
+                  $mf = !empty($mFirst) ? strtoupper(substr($mFirst, 0, 1)) : '';
+                  $ml = !empty($mLast) ? strtoupper(substr($mLast, 0, 1)) : '';
+                  $mInitials = trim($mf . $ml) !== '' ? ($mf . $ml) : 'U';
+
+                  $mRole = strtolower((string) ($m->user_role ?? 'user'));
+                  $mIsStaff = in_array($mRole, ['admin', 'it'], true);
+                  $mType = (string) ($m->message_type ?? 'public');
+                @endphp
+
+                @if ($mType === 'internal')
+                  <article class="note">
+                    <div class="note-icon"><i class='bx bx-note'></i></div>
+                    <div class="note-body">
+                      <div class="note-top">
+                        <strong>Internal note</strong>
+                        <span class="muted">{{ optional($m->created_at)->diffForHumans() }} by {{ trim(($mFirst ?? '').' '.($mLast ?? '')) }}</span>
+                      </div>
+                      <p>{{ $m->body }}</p>
+                    </div>
+                  </article>
+                @else
+                  <article class="msg {{ $mIsStaff ? 'agent' : 'requester' }}">
+                    <div class="msg-aside">
+                      <div class="avatar {{ $mIsStaff ? 'agent' : 'soft' }}">{{ $mInitials }}</div>
+                    </div>
+                    <div class="msg-body">
+                      <div class="msg-top">
+                        <strong>{{ trim(($mFirst ?? '').' '.($mLast ?? '')) }}</strong>
+                        <span class="muted">{{ $mIsStaff ? 'IT Support' : 'Requester' }} • {{ optional($m->created_at)->diffForHumans() }}</span>
+                      </div>
+                      <p>{{ $m->body }}</p>
+                    </div>
+                  </article>
+                @endif
+              @endforeach
+            @endif
           </div>
 
           <!-- Composer (sticky inside panel) -->
           <div class="panel-foot composer">
-            <div class="compose-tabs">
-              <button class="tab-btn active" data-tab="public">Public reply</button>
-              <button class="tab-btn" data-tab="internal">Internal note</button>
-            </div>
-            <div class="compose-wrap">
-              <textarea rows="5" placeholder="Write your message..."></textarea>
-              <div class="compose-actions">
-                <div class="left">
-                  <button class="btn-outlined attach"><i class='bx bx-paperclip'></i> Attach</button>
-                  <button class="btn-outlined soft"><i class='bx bx-tag'></i> Add tag</button>
-                </div>
-                <div class="right">
-                  <div class="select-pill size-s">
-                    <select>
-                      <option>Keep In Progress</option>
-                      <option>Mark Resolved</option>
-                      <option>Close</option>
-                    </select>
-                    <i class='bx bx-chevron-down'></i>
+            <form id="composerForm" method="POST" action="{{ route('tickets.messages.store', $ticket->ticket_id) }}">
+              @csrf
+              <div class="compose-tabs">
+                <button type="button" class="tab-btn active" data-tab="public">Public reply</button>
+                @if ($is_staff)
+                  <button type="button" class="tab-btn" data-tab="internal">Internal note</button>
+                @endif
+              </div>
+
+              <input type="hidden" name="message_type" id="messageType" value="public">
+
+              <div class="compose-wrap">
+                <textarea id="composerBody" name="body" rows="5" placeholder="Write your message..." required></textarea>
+                <div class="compose-actions">
+                  <div class="left">
+                    <button class="btn-outlined attach" type="button" disabled title="Coming soon"><i class='bx bx-paperclip'></i> Attach</button>
+                    <button class="btn-outlined soft" type="button" disabled title="Coming soon"><i class='bx bx-tag'></i> Add tag</button>
                   </div>
-                  <button class="btn-primary send"><i class='bx bx-send'></i> Send</button>
+                  <div class="right">
+                    @if ($is_staff)
+                      <div class="select-pill size-s">
+                        <select name="next_status" aria-label="Next status">
+                          <option value="">Keep status</option>
+                          <option value="in_progress">Set In Progress</option>
+                          <option value="resolved">Mark Resolved</option>
+                          <option value="closed">Close</option>
+                        </select>
+                        <i class='bx bx-chevron-down'></i>
+                      </div>
+                    @endif
+                    <button class="btn-primary send" type="submit"><i class='bx bx-send'></i> Send</button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </form>
           </div>
         </section>
 
@@ -304,7 +334,7 @@
             <div class="panel-body files">
               @if (count($attachments) > 0)
                 @foreach ($attachments as $path)
-                  <a class="file" href="{{ asset('storage/' . $path) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ basename($path) }}</a>
+                  <a class="file" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($path) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ basename($path) }}</a>
                 @endforeach
               @else
                 <p class="muted">No files attached.</p>

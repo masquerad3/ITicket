@@ -4,11 +4,29 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class TicketController extends Controller
 {
+    private function normalizeTicketTimestamps(object $ticketRow): object
+    {
+        foreach (['created_at', 'updated_at'] as $field) {
+            if (!isset($ticketRow->{$field}) || $ticketRow->{$field} === null || $ticketRow->{$field} === '') {
+                continue;
+            }
+
+            try {
+                $ticketRow->{$field} = Carbon::parse((string) $ticketRow->{$field});
+            } catch (\Throwable) {
+                // Leave as-is if parsing fails.
+            }
+        }
+
+        return $ticketRow;
+    }
+
     private function isStaff(): bool
     {
         $role = strtolower((string) (auth()->user()?->role ?? 'user'));
@@ -21,6 +39,10 @@ class TicketController extends Controller
         $tickets = $this->isStaff()
             ? collect(DB::select('EXEC dbo.sp_read_all_tickets'))
             : collect(DB::select('EXEC dbo.sp_read_tickets_by_user @user_id = ?', [auth()->id()]));
+
+        $tickets = $tickets
+            ->map(fn ($row) => $this->normalizeTicketTimestamps($row))
+            ->values();
 
         $counts = [
             'total' => $tickets->count(),
@@ -50,6 +72,8 @@ class TicketController extends Controller
             abort(404);
         }
 
+        $row = $this->normalizeTicketTimestamps($row);
+
         $attachments = [];
         if (isset($row->attachments) && $row->attachments !== null && $row->attachments !== '') {
             $decoded = json_decode((string) $row->attachments, true);
@@ -59,7 +83,74 @@ class TicketController extends Controller
         }
         $row->attachments = $attachments;
 
-        return view('pages.ticket', ['ticket' => $row]);
+        $messages = collect();
+        try {
+            $includeInternal = $this->isStaff() ? 1 : 0;
+            $messages = collect(DB::select(
+                'EXEC dbo.sp_read_ticket_messages_by_ticket @ticket_id = ?, @include_internal = ?',
+                [$ticket, $includeInternal]
+            ))
+                ->map(function ($m) {
+                    foreach (['created_at'] as $field) {
+                        if (!isset($m->{$field}) || $m->{$field} === null || $m->{$field} === '') {
+                            continue;
+                        }
+                        try {
+                            $m->{$field} = Carbon::parse((string) $m->{$field});
+                        } catch (\Throwable) {
+                            // no-op
+                        }
+                    }
+
+                    return $m;
+                })
+                ->values();
+        } catch (\Throwable) {
+            $messages = collect();
+        }
+
+        return view('pages.ticket', ['ticket' => $row, 'messages' => $messages]);
+    }
+
+    public function storeMessage(Request $request, int $ticket): RedirectResponse
+    {
+        $rows = DB::select('EXEC dbo.sp_read_ticket_by_id @ticket_id = ?', [$ticket]);
+        $row = $rows[0] ?? null;
+
+        if (!$row) {
+            abort(404);
+        }
+
+        if (!$this->isStaff() && (int) $row->user_id !== (int) auth()->id()) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'body' => ['required', 'string', 'max:2000'],
+            'message_type' => ['nullable', 'string', 'in:public,internal'],
+            'next_status' => ['nullable', 'string', 'in:open,in_progress,resolved,closed'],
+        ]);
+
+        $messageType = $validated['message_type'] ?? 'public';
+        if (!$this->isStaff()) {
+            $messageType = 'public';
+        }
+
+        DB::select(
+            'EXEC dbo.sp_create_ticket_message @ticket_id = ?, @user_id = ?, @message_type = ?, @body = ?',
+            [$ticket, auth()->id(), $messageType, $validated['body']]
+        );
+
+        if ($this->isStaff() && !empty($validated['next_status'])) {
+            DB::select(
+                'EXEC dbo.sp_update_ticket_status @ticket_id=?, @status=?',
+                [$ticket, $validated['next_status']]
+            );
+        }
+
+        return redirect()
+            ->route('tickets.show', $ticket)
+            ->with('status', 'Message sent.');
     }
 
     public function assignToMe(int $ticket): RedirectResponse

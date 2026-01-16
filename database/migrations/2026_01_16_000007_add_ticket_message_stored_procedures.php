@@ -11,9 +11,6 @@ return new class extends Migration
         $sql = File::get(database_path('stored_procedures/'.$filename));
         $sql = ltrim($sql, "\xEF\xBB\xBF");
 
-        // Allow the same .sql files to be executed in SSMS (GO/USE) and in Laravel (DB::unprepared).
-        // - GO is a client-side batch separator, not valid T-SQL.
-        // - USE switches databases, which should be controlled by your Laravel connection.
         $sql = preg_replace('/^\s*GO\s*$/im', '', $sql) ?? $sql;
         $sql = preg_replace('/^\s*USE\s+[^\r\n;]+;?\s*$/im', '', $sql) ?? $sql;
 
@@ -22,21 +19,13 @@ return new class extends Migration
 
     public function up(): void
     {
-        // Only SQL Server supports these exact procedure bodies.
         if (DB::getDriverName() !== 'sqlsrv') {
             return;
         }
 
         $files = [
-            'sp_create_ticket.sql',
-            'sp_update_ticket_attachments.sql',
-            'sp_read_tickets_by_user.sql',
-            'sp_read_all_tickets.sql',
-            'sp_read_ticket_by_id.sql',
             'sp_create_ticket_message.sql',
             'sp_read_ticket_messages_by_ticket.sql',
-            'sp_assign_ticket_to_user.sql',
-            'sp_update_ticket_status.sql',
         ];
 
         foreach ($files as $file) {
@@ -50,14 +39,7 @@ return new class extends Migration
             return;
         }
 
-        DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_update_ticket_status');
-        DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_assign_ticket_to_user');
         DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_read_ticket_messages_by_ticket');
         DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_create_ticket_message');
-        DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_read_ticket_by_id');
-        DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_read_all_tickets');
-        DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_read_tickets_by_user');
-        DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_update_ticket_attachments');
-        DB::unprepared('DROP PROCEDURE IF EXISTS dbo.sp_create_ticket');
     }
 };

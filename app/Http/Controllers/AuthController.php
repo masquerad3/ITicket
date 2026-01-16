@@ -60,12 +60,9 @@ class AuthController extends Controller
             ]);
         }
 
-        // Convert the raw DB row into an actual User model.
-        // findOrFail will throw an error if the ID doesn't exist (should not happen if DB is consistent).
-        $user = User::findOrFail($row->user_id);
-
         // Log the user in (stores user ID in the session).
-        Auth::login($user);
+        // The app uses a stored-procedure user provider, so user loading stays SP-only.
+        Auth::loginUsingId((int) $row->user_id);
 
         // Security: regenerate session ID after login to prevent session fixation attacks.
         $request->session()->regenerate();
@@ -117,11 +114,9 @@ class AuthController extends Controller
             return redirect()->route('login')->with('status', 'Account created. Please log in.');
         }
 
-        // Load the new user as a User model so Laravel Auth can log them in.
-        $user = User::findOrFail($row->user_id);
-
         // Log them in immediately after registration.
-        Auth::login($user);
+        // The app uses a stored-procedure user provider, so user loading stays SP-only.
+        Auth::loginUsingId((int) $row->user_id);
 
         // Regenerate session for security (same reason as login()).
         $request->session()->regenerate();

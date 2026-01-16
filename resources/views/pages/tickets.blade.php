@@ -91,36 +91,36 @@
         <div class="filter-bar">
           <div class="searchbar">
             <i class='bx bx-search'></i>
-            <input type="text" placeholder="Search tickets by ID, subject, or keyword">
-            <button type="button" class="btn-clear" title="Clear"><i class='bx bx-x'></i></button>
+            <input id="ticketSearch" type="text" placeholder="Search tickets by ID, subject, or keyword" autocomplete="off">
+            <button id="ticketSearchClear" type="button" class="btn-clear" title="Clear"><i class='bx bx-x'></i></button>
           </div>
 
           <div class="select-row">
             <div class="select-pill">
               <select id="statusFilter" aria-label="Status">
-                <option>All Status</option>
-                <option>Open</option>
-                <option>In Progress</option>
-                <option>Resolved</option>
-                <option>Closed</option>
+                <option value="">All Status</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
               </select>
               <i class='bx bx-chevron-down'></i>
             </div>
 
             <div class="select-pill">
               <select id="priorityFilter" aria-label="Priority">
-                <option>All Priority</option>
-                <option>High</option>
-                <option>Medium</option>
-                <option>Low</option>
+                <option value="">All Priority</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
               </select>
               <i class='bx bx-chevron-down'></i>
             </div>
 
             <div class="select-pill">
               <select id="sortFilter" aria-label="Sort">
-                <option>Sort: Latest</option>
-                <option>Sort: Oldest</option>
+                <option value="latest">Sort: Latest</option>
+                <option value="oldest">Sort: Oldest</option>
               </select>
               <i class='bx bx-chevron-down'></i>
             </div>
@@ -132,12 +132,12 @@
       <section class="panel tickets-panel">
         <div class="panel-head">
           <div class="results-left">
-            <strong>Showing {{ isset($tickets) ? $tickets->count() : 0 }} Tickets</strong>
+            <strong id="resultsCount">Showing {{ isset($tickets) ? $tickets->count() : 0 }} Tickets</strong>
           </div>
           <div class="pager">
-            <button class="btn-pager" disabled><i class='bx bx-chevron-left'></i> Prev</button>
-            <span class="page-info">1 - 10</span>
-            <button class="btn-pager">Next <i class='bx bx-chevron-right'></i></button>
+            <button id="pagerPrevTop" class="btn-pager" type="button" disabled><i class='bx bx-chevron-left'></i> Prev</button>
+            <span id="pageInfoTop" class="page-info">1 - 1</span>
+            <button id="pagerNextTop" class="btn-pager" type="button" disabled>Next <i class='bx bx-chevron-right'></i></button>
           </div>
         </div>
 
@@ -154,9 +154,29 @@
                   if ($t->status === 'closed') $statusLabel = 'Closed';
 
                   $priorityLabel = $t->priority . ' Priority';
+
+                  $assigneeName = '';
+                  if (!empty($t->assignee_first_name)) {
+                    $assigneeName = trim(($t->assignee_first_name ?? '').' '.($t->assignee_last_name ?? ''));
+                  }
+
+                  $searchBlob = strtolower(trim(
+                    implode(' ', [
+                      $displayId,
+                      (string) ($t->subject ?? ''),
+                      (string) ($t->description ?? ''),
+                      (string) ($t->category ?? ''),
+                      (string) ($assigneeName !== '' ? $assigneeName : ''),
+                    ])
+                  ));
                 @endphp
 
-                <article class="ticket-card">
+                <article class="ticket-card"
+                  data-ticket-id="{{ $t->ticket_id }}"
+                  data-status="{{ $t->status }}"
+                  data-priority="{{ $t->priority }}"
+                  data-created-ts="{{ $t->created_at?->timestamp ?? 0 }}"
+                  data-search="{{ $searchBlob }}">
                   <header class="tcard-head">
                     <a class="ticket-id" href="{{ route('tickets.show', $t->ticket_id) }}">{{ $displayId }}</a>
                     <div class="badges">
@@ -183,12 +203,6 @@
                     <span class="meta">{{ optional($t->created_at)->diffForHumans() }}</span>
                     <span class="dot">•</span>
                     <span class="meta">
-                      @php
-                        $assigneeName = '';
-                        if (!empty($t->assignee_first_name)) {
-                          $assigneeName = trim(($t->assignee_first_name ?? '').' '.($t->assignee_last_name ?? ''));
-                        }
-                      @endphp
                       {{ $assigneeName !== '' ? $assigneeName : ($t->assigned_to ? 'User #'.$t->assigned_to : 'Unassigned') }}
                     </span>
                     <span class="dot">•</span>
@@ -205,9 +219,9 @@
 
         <div class="panel-foot">
           <div class="pager">
-            <button class="btn-pager" disabled><i class='bx bx-chevron-left'></i> Prev</button>
-            <span class="page-info">1 - 10 of 48</span>
-            <button class="btn-pager">Next <i class='bx bx-chevron-right'></i></button>
+            <button id="pagerPrevBottom" class="btn-pager" type="button" disabled><i class='bx bx-chevron-left'></i> Prev</button>
+            <span id="pageInfoBottom" class="page-info">1 - 1</span>
+            <button id="pagerNextBottom" class="btn-pager" type="button" disabled>Next <i class='bx bx-chevron-right'></i></button>
           </div>
         </div>
       </section>
@@ -226,5 +240,6 @@
   </div>
 
   <script src="{{ asset('assets/js/components/sidebar.js') }}"></script>
+  <script src="{{ asset('assets/js/pages/tickets.js') }}"></script>
 </body>
 </html>
