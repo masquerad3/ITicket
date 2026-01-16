@@ -431,8 +431,63 @@
 .file-section { display: grid; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eeeeee }
 .file-section-title { font-weight: 700 }
 
-.activity { display: grid; gap: 8px }
+.activity {
+  display: grid;
+  gap: 8px;
+  max-height: 480px;
+  overflow: auto;
+  padding-right: 6px;
+}
 .a-row { display: grid; gap: 4px }
+
+.attachment-preview {
+  margin-left: 24px;
+}
+
+.img-details {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.img-details > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e3defa;
+  background: #ffffff;
+  color: #6D65C7;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.img-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.img-details > summary::before {
+  content: 'Show image';
+}
+
+.img-details[open] > summary::before {
+  content: 'Hide image';
+}
+
+.img-attach {
+  max-width: 280px;
+  max-height: 220px;
+  object-fit: contain;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #eeeeee;
+  box-shadow: 0 6px 16px rgba(17, 24, 39, .08);
+  display: block;
+}
 
 /* Responsive */
 @media (max-width: 1100px) {

@@ -170,10 +170,23 @@
                 @if (count($attachments) > 0)
                   <ul class="attachments">
                     @foreach ($attachments as $path)
+                      @php
+                        $isImg = preg_match('/\.(png|jpe?g|gif|webp)$/i', (string) $path) === 1;
+                      @endphp
                       <li>
                         <i class='bx bx-file'></i>
                         <a href="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" target="_blank" rel="noopener">{{ basename($path) }}</a>
                       </li>
+                      @if ($isImg)
+                        <li class="attachment-preview">
+                          <details class="img-details">
+                            <summary class="img-summary"></summary>
+                            <a href="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" target="_blank" rel="noopener">
+                              <img class="img-attach" src="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" alt="{{ basename($path) }}">
+                            </a>
+                          </details>
+                        </li>
+                      @endif
                     @endforeach
                   </ul>
                 @endif
@@ -221,6 +234,37 @@
                         <span class="muted">{{ $mIsStaff ? 'IT Support' : 'Requester' }} • {{ optional($m->created_at)->diffForHumans() }}</span>
                       </div>
                       <p>{{ $m->body }}</p>
+
+                      @php
+                        $mFiles = $m->files ?? collect();
+                        if (!($mFiles instanceof \Illuminate\Support\Collection)) $mFiles = collect($mFiles);
+                      @endphp
+
+                      @if ($mFiles->count() > 0)
+                        <ul class="attachments">
+                          @foreach ($mFiles as $f)
+                            @php
+                              $mime = (string) ($f->mime ?? '');
+                              $isImg = str_starts_with($mime, 'image/');
+                              $name = $f->original_name ?? basename((string) ($f->stored_path ?? ''));
+                            @endphp
+                            <li>
+                              <i class='bx bx-file'></i>
+                              <a href="{{ route('tickets.messageFiles.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener">{{ $name }}</a>
+                            </li>
+                            @if ($isImg)
+                              <li class="attachment-preview">
+                                <details class="img-details">
+                                  <summary class="img-summary"></summary>
+                                  <a href="{{ route('tickets.messageFiles.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener">
+                                    <img class="img-attach" src="{{ route('tickets.messageFiles.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" alt="{{ $name }}">
+                                  </a>
+                                </details>
+                              </li>
+                            @endif
+                          @endforeach
+                        </ul>
+                      @endif
                     </div>
                   </article>
                 @endif
@@ -230,7 +274,7 @@
 
           <!-- Composer (sticky inside panel) -->
           <div class="panel-foot composer">
-            <form id="composerForm" method="POST" action="{{ route('tickets.messages.store', $ticket->ticket_id) }}">
+            <form id="composerForm" method="POST" action="{{ route('tickets.messages.store', $ticket->ticket_id) }}" enctype="multipart/form-data">
               @csrf
               <div class="compose-tabs">
                 <button type="button" class="tab-btn active" data-tab="public">Public reply</button>
@@ -240,12 +284,14 @@
               </div>
 
               <input type="hidden" name="message_type" id="messageType" value="public">
+              <input id="composerFilesInput" name="files[]" type="file" multiple hidden accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.txt">
 
               <div class="compose-wrap">
                 <textarea id="composerBody" name="body" rows="5" placeholder="Write your message..." required></textarea>
                 <div class="compose-actions">
                   <div class="left">
-                      <button id="composerAttachBtn" class="btn-outlined attach" type="button" title="Attach files to this ticket"><i class='bx bx-paperclip'></i> Attach</button>
+                      <button id="composerAttachBtn" class="btn-outlined attach" type="button" title="Attach files to this message"><i class='bx bx-paperclip'></i> Attach</button>
+                      <span id="composerFilesHint" class="muted" style="align-self:center;display:none;"></span>
                   </div>
                   <div class="right">
                     @if ($is_staff)
@@ -340,23 +386,27 @@
                 @foreach ($tags as $tag)
                   <div class="tag">
                     <span class="tag-label">{{ $tag }}</span>
-                    <form method="POST" action="{{ route('tickets.tags.delete', $ticket->ticket_id) }}" style="display:inline;">
-                      @csrf
-                      @method('DELETE')
-                      <input type="hidden" name="tag" value="{{ $tag }}">
-                      <button type="submit" class="tag-remove" aria-label="Remove tag {{ $tag }}"><i class='bx bx-x'></i></button>
-                    </form>
+                    @if ($is_staff)
+                      <form method="POST" action="{{ route('tickets.tags.delete', $ticket->ticket_id) }}" style="display:inline;">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="tag" value="{{ $tag }}">
+                        <button type="submit" class="tag-remove" aria-label="Remove tag {{ $tag }}"><i class='bx bx-x'></i></button>
+                      </form>
+                    @endif
                   </div>
                 @endforeach
               @else
                 <p class="muted">No tags yet.</p>
               @endif
 
-              <form method="POST" action="{{ route('tickets.tags.store', $ticket->ticket_id) }}" class="tag-form">
-                @csrf
-                <input name="tag" type="text" placeholder="Add tag (e.g. email, vpn, mfa)" class="tag-input">
-                <button class="btn-outlined small" type="submit"><i class='bx bx-plus'></i> Add</button>
-              </form>
+              @if ($is_staff)
+                <form method="POST" action="{{ route('tickets.tags.store', $ticket->ticket_id) }}" class="tag-form">
+                  @csrf
+                  <input name="tag" type="text" placeholder="Add tag (e.g. email, vpn, mfa)" class="tag-input">
+                  <button class="btn-outlined small" type="submit"><i class='bx bx-plus'></i> Add</button>
+                </form>
+              @endif
             </div>
           </section>
 

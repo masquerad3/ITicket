@@ -6,6 +6,8 @@
   const tabs = Array.from(document.querySelectorAll('.compose-tabs .tab-btn'));
 
   const composerAttachBtn = document.getElementById('composerAttachBtn');
+  const composerFilesInput = document.getElementById('composerFilesInput');
+  const composerFilesHint = document.getElementById('composerFilesHint');
 
   const uploadBtn = document.getElementById('uploadAttachmentsBtn');
   const uploadInput = document.getElementById('uploadAttachmentsInput');
@@ -30,8 +32,21 @@
     uploadBtn.addEventListener('click', () => uploadInput.click());
   }
 
-  if (composerAttachBtn && uploadInput) {
-    composerAttachBtn.addEventListener('click', () => uploadInput.click());
+  if (composerAttachBtn && composerFilesInput) {
+    composerAttachBtn.addEventListener('click', () => composerFilesInput.click());
+  }
+
+  if (composerFilesInput && composerFilesHint) {
+    composerFilesInput.addEventListener('change', () => {
+      const n = composerFilesInput.files ? composerFilesInput.files.length : 0;
+      if (n > 0) {
+        composerFilesHint.textContent = n === 1 ? '1 file selected' : `${n} files selected`;
+        composerFilesHint.style.display = 'inline-flex';
+      } else {
+        composerFilesHint.textContent = '';
+        composerFilesHint.style.display = 'none';
+      }
+    });
   }
 
   if (uploadInput && uploadForm) {

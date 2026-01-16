@@ -71,12 +71,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/tickets/{ticket}/attachments', [TicketController::class, 'uploadAttachments'])->name('tickets.attachments.store');
     Route::get('/tickets/{ticket}/attachments/view', [TicketController::class, 'viewAttachment'])->name('tickets.attachments.view');
     Route::get('/tickets/{ticket}/files/{file}', [TicketController::class, 'viewFile'])->whereNumber('file')->name('tickets.files.show');
-    Route::post('/tickets/{ticket}/tags', [TicketController::class, 'addTag'])->name('tickets.tags.store');
-    Route::delete('/tickets/{ticket}/tags', [TicketController::class, 'removeTag'])->name('tickets.tags.delete');
+    Route::get('/tickets/{ticket}/message-files/{file}', [TicketController::class, 'viewMessageFile'])->whereNumber('file')->name('tickets.messageFiles.show');
 
     Route::middleware('role:admin,it')->group(function () {
         Route::post('/tickets/{ticket}/assign-to-me', [TicketController::class, 'assignToMe'])->name('tickets.assignToMe');
         Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.updateStatus');
+        Route::post('/tickets/{ticket}/tags', [TicketController::class, 'addTag'])->name('tickets.tags.store');
+        Route::delete('/tickets/{ticket}/tags', [TicketController::class, 'removeTag'])->name('tickets.tags.delete');
     });
 
     Route::get('/knowledge', fn () => view('pages.knowledge'))->name('knowledge');

@@ -169,6 +169,34 @@ class TicketController extends Controller
             $messages = collect();
         }
 
+        $messageFiles = collect();
+        try {
+            $messageFiles = collect(DB::select('EXEC dbo.sp_read_ticket_message_files_by_ticket @ticket_id = ?', [$ticket]))
+                ->map(function ($f) {
+                    if (isset($f->created_at) && $f->created_at !== null && $f->created_at !== '') {
+                        $parsed = $this->parseDbDatetime($f->created_at);
+                        if ($parsed !== null) {
+                            $f->created_at = $parsed;
+                        }
+                    }
+
+                    return $f;
+                })
+                ->values();
+        } catch (\Throwable) {
+            $messageFiles = collect();
+        }
+
+        if ($messages->count() > 0 && $messageFiles->count() > 0) {
+            $byMessageId = $messageFiles->groupBy('message_id');
+            $messages = $messages
+                ->map(function ($m) use ($byMessageId) {
+                    $m->files = ($byMessageId->get($m->message_id) ?? collect())->values();
+                    return $m;
+                })
+                ->values();
+        }
+
         $tags = collect();
         try {
             $tags = collect(DB::select('EXEC dbo.sp_read_ticket_tags_by_ticket @ticket_id = ?', [$ticket]))
@@ -386,6 +414,10 @@ class TicketController extends Controller
 
     public function addTag(Request $request, int $ticket): RedirectResponse
     {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
         $this->getAuthorizedTicketRow($ticket);
 
         $validated = $request->validate([
@@ -412,6 +444,10 @@ class TicketController extends Controller
 
     public function removeTag(Request $request, int $ticket): RedirectResponse
     {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
         $this->getAuthorizedTicketRow($ticket);
 
         $validated = $request->validate([
@@ -444,6 +480,8 @@ class TicketController extends Controller
             'body' => ['required', 'string', 'max:2000'],
             'message_type' => ['nullable', 'string', 'in:public,internal'],
             'next_status' => ['nullable', 'string', 'in:open,in_progress,resolved,closed'],
+            'files' => ['nullable', 'array', 'max:5'],
+            'files.*' => ['file', 'max:10240', 'mimes:png,jpg,jpeg,gif,webp,pdf,doc,docx,txt'],
         ]);
 
         $messageType = $validated['message_type'] ?? 'public';
@@ -451,10 +489,33 @@ class TicketController extends Controller
             $messageType = 'public';
         }
 
-        DB::select(
+        $created = DB::select(
             'EXEC dbo.sp_create_ticket_message @ticket_id = ?, @user_id = ?, @message_type = ?, @body = ?',
             [$ticket, auth()->id(), $messageType, $validated['body']]
         );
+
+        $messageId = (int) (($created[0]->message_id ?? 0));
+        if ($messageId > 0) {
+            foreach ($request->file('files', []) as $file) {
+                $storedPath = Storage::disk('public')->putFile("tickets/{$ticket}/messages/{$messageId}", $file);
+
+                try {
+                    DB::select(
+                        'EXEC dbo.sp_create_ticket_message_file @message_id=?, @uploaded_by=?, @stored_path=?, @original_name=?, @mime=?, @size=?',
+                        [
+                            $messageId,
+                            auth()->id(),
+                            $storedPath,
+                            $file->getClientOriginalName(),
+                            $file->getClientMimeType(),
+                            $file->getSize(),
+                        ]
+                    );
+                } catch (\Throwable) {
+                    // no-op
+                }
+            }
+        }
 
         if ($this->isStaff() && !empty($validated['next_status'])) {
             DB::select(
@@ -467,6 +528,29 @@ class TicketController extends Controller
             ->route('tickets.show', $ticket)
             ->with('status', 'Message sent.');
 
+    }
+
+    public function viewMessageFile(int $ticket, int $file): BinaryFileResponse
+    {
+        $this->getAuthorizedTicketRow($ticket);
+
+        $rows = [];
+        try {
+            $rows = DB::select('EXEC dbo.sp_read_ticket_message_files_by_ticket @ticket_id = ?', [$ticket]);
+        } catch (\Throwable) {
+            abort(404);
+        }
+
+        $match = collect($rows)->firstWhere('file_id', $file);
+        if (!$match) {
+            abort(404);
+        }
+
+        return $this->inlineFileResponse(
+            (string) ($match->stored_path ?? ''),
+            (string) ($match->original_name ?? null),
+            isset($match->mime) ? (string) $match->mime : null
+        );
     }
 
     public function viewFile(int $ticket, int $file): BinaryFileResponse
