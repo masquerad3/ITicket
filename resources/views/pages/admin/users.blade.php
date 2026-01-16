@@ -39,21 +39,40 @@
           <p class="muted">Admin-only: update roles and deactivate accounts.</p>
         </div>
         <div class="page-header-actions">
-          <div class="admin-search" role="search">
-            <i class='bx bx-search'></i>
-            <input id="userSearch" type="text" placeholder="Search by name, email, role…" autocomplete="off">
+          <div class="admin-controls">
+            <div class="admin-search" role="search">
+              <i class='bx bx-search'></i>
+              <input id="userSearch" type="text" placeholder="Search by name, email, role…" autocomplete="off">
+            </div>
+
+            <div class="admin-filters">
+              <select id="roleFilter" class="select" aria-label="Filter by role">
+                <option value="">All roles</option>
+                <option value="admin">admin</option>
+                <option value="it">it</option>
+                <option value="user">user</option>
+              </select>
+
+              <select id="activeFilter" class="select" aria-label="Filter by status">
+                <option value="">All status</option>
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+              </select>
+
+              <button type="button" class="btn-outlined" id="clearFilters">Clear</button>
+            </div>
           </div>
         </div>
       </header>
 
       @if (session('status'))
-        <div class="panel" role="status" style="border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;">
+        <div class="notice notice-success" role="status">
           {{ session('status') }}
         </div>
       @endif
 
       @if ($errors->any())
-        <div class="panel" role="alert" style="border:1px solid #fecaca;background:#fef2f2;color:#991b1b;">
+        <div class="notice notice-danger" role="alert">
           <ul>
             @foreach ($errors->all() as $error)
               <li>{{ $error }}</li>
@@ -68,7 +87,7 @@
             <strong>Users</strong>
             <span class="pill">{{ $users->count() }} total</span>
           </div>
-          <div class="head-right muted">Tip: change role to <strong>it</strong> to test staff tickets</div>
+          <div class="head-right"></div>
         </div>
 
         <div class="panel-body" style="padding:0;">
@@ -92,9 +111,15 @@
                     $role = strtolower((string) ($u->role ?? 'user'));
                     $isMe = (int) ($u->user_id ?? 0) === (int) auth()->id();
                     $rowClass = $isMe ? 'is-me' : '';
+                    $formId = 'userForm-'.$u->user_id;
                   @endphp
 
-                  <tr class="{{ $rowClass }}" data-search="{{ strtolower(($u->first_name ?? '').' '.($u->last_name ?? '').' '.($u->email ?? '').' '.($u->contact ?? '').' '.($u->role ?? '')) }}">
+                  <tr
+                    class="{{ $rowClass }}"
+                    data-search="{{ strtolower(($u->first_name ?? '').' '.($u->last_name ?? '').' '.($u->email ?? '').' '.($u->contact ?? '').' '.($u->role ?? '')) }}"
+                    data-role="{{ $role }}"
+                    data-active="{{ (int) ($u->is_active ?? 0) }}"
+                  >
                     <td>#{{ $u->user_id }}</td>
                     <td>
                       <div class="name-cell">
@@ -107,9 +132,22 @@
                     <td class="mono">{{ $u->email }}</td>
                     <td class="mono">{{ $u->contact }}</td>
                     <td>
-                      <span class="role-badge role-{{ $role }}">{{ $role }}</span>
-
-                      <form method="POST" action="{{ route('admin.users.update', $u->user_id) }}" class="row-form">
+                      <select name="role" class="input" aria-label="Role" form="{{ $formId }}">
+                        <option value="user" @selected($u->role === 'user')>user</option>
+                        <option value="it" @selected($u->role === 'it')>it</option>
+                        <option value="admin" @selected($u->role === 'admin')>admin</option>
+                      </select>
+                    </td>
+                    <td>
+                      <label class="toggle" title="Active">
+                        <input type="hidden" name="is_active" value="0" form="{{ $formId }}">
+                        <input type="checkbox" name="is_active" value="1" @checked((int) $u->is_active === 1) form="{{ $formId }}">
+                        <span class="track"><span class="thumb"></span></span>
+                      </label>
+                    </td>
+                    <td>{{ !empty($u->created_at) ? \Illuminate\Support\Carbon::parse($u->created_at)->format('Y-m-d') : '' }}</td>
+                    <td>
+                      <form id="{{ $formId }}" method="POST" action="{{ route('admin.users.update', $u->user_id) }}" class="row-form">
                         @csrf
                         @method('PATCH')
 
@@ -118,21 +156,6 @@
                         <input type="hidden" name="email" value="{{ $u->email }}">
                         <input type="hidden" name="contact" value="{{ $u->contact }}">
 
-                        <select name="role" class="input" aria-label="Role">
-                          <option value="user" @selected($u->role === 'user')>user</option>
-                          <option value="it" @selected($u->role === 'it')>it</option>
-                          <option value="admin" @selected($u->role === 'admin')>admin</option>
-                        </select>
-                    </td>
-                    <td>
-                        <label class="toggle" title="Active">
-                          <input type="hidden" name="is_active" value="0">
-                          <input type="checkbox" name="is_active" value="1" @checked((int) $u->is_active === 1)>
-                          <span class="track"><span class="thumb"></span></span>
-                        </label>
-                    </td>
-                    <td>{{ !empty($u->created_at) ? \Illuminate\Support\Carbon::parse($u->created_at)->format('Y-m-d') : '' }}</td>
-                    <td>
                         <button type="submit" class="btn-primary btn-small">Save</button>
                       </form>
                     </td>
@@ -151,15 +174,39 @@
     (function () {
       const input = document.getElementById('userSearch');
       const table = document.getElementById('usersTable');
+      const roleFilter = document.getElementById('roleFilter');
+      const activeFilter = document.getElementById('activeFilter');
+      const clearBtn = document.getElementById('clearFilters');
       if (!input || !table) return;
 
-      input.addEventListener('input', function () {
+      function applyFilters() {
         const q = (input.value || '').trim().toLowerCase();
+        const role = (roleFilter?.value || '').trim().toLowerCase();
+        const active = (activeFilter?.value || '').trim();
         const rows = table.querySelectorAll('tbody tr');
+
         rows.forEach((tr) => {
           const hay = (tr.getAttribute('data-search') || '').toLowerCase();
-          tr.style.display = q === '' || hay.includes(q) ? '' : 'none';
+          const rowRole = (tr.getAttribute('data-role') || '').toLowerCase();
+          const rowActive = (tr.getAttribute('data-active') || '').trim();
+
+          const matchesSearch = q === '' || hay.includes(q);
+          const matchesRole = role === '' || rowRole === role;
+          const matchesActive = active === '' || rowActive === active;
+
+          tr.style.display = (matchesSearch && matchesRole && matchesActive) ? '' : 'none';
         });
+      }
+
+      input.addEventListener('input', applyFilters);
+      roleFilter?.addEventListener('change', applyFilters);
+      activeFilter?.addEventListener('change', applyFilters);
+      clearBtn?.addEventListener('click', function () {
+        input.value = '';
+        if (roleFilter) roleFilter.value = '';
+        if (activeFilter) activeFilter.value = '';
+        applyFilters();
+        input.focus();
       });
     })();
   </script>
