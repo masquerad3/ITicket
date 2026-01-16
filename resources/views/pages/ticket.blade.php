@@ -56,6 +56,14 @@
     if (!is_array($attachments)) $attachments = [];
 
     $messages = $messages ?? collect();
+    $tags = $tags ?? collect();
+    if (!($tags instanceof \Illuminate\Support\Collection)) $tags = collect($tags);
+
+    $files = $files ?? collect();
+    if (!($files instanceof \Illuminate\Support\Collection)) $files = collect($files);
+
+    $activity = $activity ?? collect();
+    if (!($activity instanceof \Illuminate\Support\Collection)) $activity = collect($activity);
   @endphp
   <div class="page">
     <!-- Topbar -->
@@ -116,8 +124,6 @@
               <button type="submit" class="btn-soft"><i class='bx bx-check-circle'></i> Mark Resolved</button>
             </form>
           @endif
-
-          <button id="replyScroll" class="btn-primary" type="button"><i class='bx bx-reply'></i> Add Reply</button>
         </div>
       </section>
 
@@ -131,8 +137,13 @@
       <section class="pill-row">
         <div class="pill"><i class='bx bx-time-five'></i> Created {{ optional($ticket->created_at)->format('Y-m-d H:i') }}</div>
         <div class="pill"><i class='bx bx-sync'></i> Updated {{ optional($ticket->updated_at)->diffForHumans() }}</div>
+        @if (!empty($ticket->assigned_at))
+          <div class="pill"><i class='bx bx-user-check'></i> Assigned {{ optional($ticket->assigned_at)->diffForHumans() }}</div>
+        @endif
+        @if (!empty($ticket->resolved_at))
+          <div class="pill"><i class='bx bx-check-circle'></i> Resolved {{ optional($ticket->resolved_at)->diffForHumans() }}</div>
+        @endif
         <div class="pill"><i class='bx bx-category'></i> {{ $ticket->category }}</div>
-        <div class="pill"><i class='bx bx-target-lock'></i> SLA: 4h response</div>
       </section>
 
       <!-- Main grid -->
@@ -161,7 +172,7 @@
                     @foreach ($attachments as $path)
                       <li>
                         <i class='bx bx-file'></i>
-                        <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($path) }}" target="_blank" rel="noopener">{{ basename($path) }}</a>
+                        <a href="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" target="_blank" rel="noopener">{{ basename($path) }}</a>
                       </li>
                     @endforeach
                   </ul>
@@ -183,6 +194,10 @@
                   $mIsStaff = in_array($mRole, ['admin', 'it'], true);
                   $mType = (string) ($m->message_type ?? 'public');
                 @endphp
+
+                @if ($mType === 'system')
+                  @continue
+                @endif
 
                 @if ($mType === 'internal')
                   <article class="note">
@@ -230,8 +245,7 @@
                 <textarea id="composerBody" name="body" rows="5" placeholder="Write your message..." required></textarea>
                 <div class="compose-actions">
                   <div class="left">
-                    <button class="btn-outlined attach" type="button" disabled title="Coming soon"><i class='bx bx-paperclip'></i> Attach</button>
-                    <button class="btn-outlined soft" type="button" disabled title="Coming soon"><i class='bx bx-tag'></i> Add tag</button>
+                      <button id="composerAttachBtn" class="btn-outlined attach" type="button" title="Attach files to this ticket"><i class='bx bx-paperclip'></i> Attach</button>
                   </div>
                   <div class="right">
                     @if ($is_staff)
@@ -322,34 +336,81 @@
           <section class="panel info">
             <div class="panel-head"><h3>Tags</h3></div>
             <div class="panel-body tags">
-              <button class="tag">email</button>
-              <button class="tag">login</button>
-              <button class="tag">mfa</button>
-              <button class="btn-outlined small"><i class='bx bx-plus'></i> Add</button>
+              @if ($tags->count() > 0)
+                @foreach ($tags as $tag)
+                  <div class="tag">
+                    <span class="tag-label">{{ $tag }}</span>
+                    <form method="POST" action="{{ route('tickets.tags.delete', $ticket->ticket_id) }}" style="display:inline;">
+                      @csrf
+                      @method('DELETE')
+                      <input type="hidden" name="tag" value="{{ $tag }}">
+                      <button type="submit" class="tag-remove" aria-label="Remove tag {{ $tag }}"><i class='bx bx-x'></i></button>
+                    </form>
+                  </div>
+                @endforeach
+              @else
+                <p class="muted">No tags yet.</p>
+              @endif
+
+              <form method="POST" action="{{ route('tickets.tags.store', $ticket->ticket_id) }}" class="tag-form">
+                @csrf
+                <input name="tag" type="text" placeholder="Add tag (e.g. email, vpn, mfa)" class="tag-input">
+                <button class="btn-outlined small" type="submit"><i class='bx bx-plus'></i> Add</button>
+              </form>
             </div>
           </section>
 
           <section class="panel info">
             <div class="panel-head"><h3>Attachments</h3></div>
             <div class="panel-body files">
-              @if (count($attachments) > 0)
-                @foreach ($attachments as $path)
-                  <a class="file" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($path) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ basename($path) }}</a>
+              @if ($files->count() > 0)
+                @foreach ($files as $f)
+                  @php
+                    $uploaderName = trim(($f->uploader_first_name ?? '').' '.($f->uploader_last_name ?? ''));
+                    if ($uploaderName === '') $uploaderName = 'User #'.($f->uploaded_by ?? '');
+                    $fname = $f->original_name ?? basename((string) ($f->stored_path ?? ''));
+                  @endphp
+                  <div class="file-row">
+                    <a class="file" href="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ $fname }}</a>
+                    <div class="file-meta muted">Uploaded {{ optional($f->created_at ?? null)->diffForHumans() }} by {{ $uploaderName }}</div>
+                  </div>
                 @endforeach
+              @elseif (count($attachments) > 0)
+                <p class="muted">Only initial attachments are available below.</p>
               @else
                 <p class="muted">No files attached.</p>
               @endif
-              <button class="btn-outlined small"><i class='bx bx-upload'></i> Upload</button>
+
+              @if (count($attachments) > 0)
+                <div class="file-section">
+                  <div class="file-section-title muted">Initial attachments</div>
+                  @foreach ($attachments as $path)
+                    <a class="file" href="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ basename($path) }}</a>
+                  @endforeach
+                </div>
+              @endif
+
+              <form id="uploadAttachmentsForm" method="POST" action="{{ route('tickets.attachments.store', $ticket->ticket_id) }}" enctype="multipart/form-data" style="margin-top:10px;">
+                @csrf
+                <input id="uploadAttachmentsInput" name="files[]" type="file" multiple hidden accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.txt">
+                <button id="uploadAttachmentsBtn" class="btn-outlined small" type="button"><i class='bx bx-upload'></i> Upload</button>
+              </form>
             </div>
           </section>
 
           <section class="panel info">
             <div class="panel-head"><h3>Activity</h3></div>
             <div class="panel-body activity">
-              <div class="a-row"><span class="muted">Today 10:10</span><p>Internal note added by Prince Remo</p></div>
-              <div class="a-row"><span class="muted">Today 10:05</span><p>Reply posted by Prince Remo</p></div>
-              <div class="a-row"><span class="muted">Today 10:04</span><p>Status set to In Progress</p></div>
-              <div class="a-row"><span class="muted">Today 09:42</span><p>Ticket created by Samuel Muralidharan</p></div>
+              @if ($activity->count() > 0)
+                @foreach ($activity as $a)
+                  <div class="a-row">
+                    <span class="muted">{{ optional($a['at'] ?? null)->diffForHumans() }}</span>
+                    <p>{{ $a['text'] ?? '' }}</p>
+                  </div>
+                @endforeach
+              @else
+                <p class="muted">No activity yet.</p>
+              @endif
             </div>
           </section>
         </aside>

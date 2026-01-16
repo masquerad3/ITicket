@@ -1,10 +1,15 @@
 // Ticket page: reply composer helpers (tabs + scroll)
 (function () {
-  const replyScroll = document.getElementById('replyScroll');
   const form = document.getElementById('composerForm');
   const body = document.getElementById('composerBody');
   const messageType = document.getElementById('messageType');
   const tabs = Array.from(document.querySelectorAll('.compose-tabs .tab-btn'));
+
+  const composerAttachBtn = document.getElementById('composerAttachBtn');
+
+  const uploadBtn = document.getElementById('uploadAttachmentsBtn');
+  const uploadInput = document.getElementById('uploadAttachmentsInput');
+  const uploadForm = document.getElementById('uploadAttachmentsForm');
 
   function setActive(tab) {
     tabs.forEach((t) => t.classList.toggle('active', t === tab));
@@ -21,12 +26,19 @@
     tab.addEventListener('click', () => setActive(tab));
   });
 
-  if (replyScroll) {
-    replyScroll.addEventListener('click', () => {
-      if (form) {
-        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (uploadBtn && uploadInput) {
+    uploadBtn.addEventListener('click', () => uploadInput.click());
+  }
+
+  if (composerAttachBtn && uploadInput) {
+    composerAttachBtn.addEventListener('click', () => uploadInput.click());
+  }
+
+  if (uploadInput && uploadForm) {
+    uploadInput.addEventListener('change', () => {
+      if (uploadInput.files && uploadInput.files.length > 0) {
+        uploadForm.submit();
       }
-      if (body) body.focus();
     });
   }
 

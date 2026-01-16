@@ -106,6 +106,9 @@ return [
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
+            // Used by the app for interpreting timezone-less SQL Server datetimes.
+            // Set DB_TIMEZONE if your SQL Server stores local time (e.g. America/New_York).
+            'timezone' => env('DB_TIMEZONE', env('APP_TIMEZONE', 'UTC')),
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
