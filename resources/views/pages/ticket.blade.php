@@ -55,6 +55,9 @@
     $attachments = $ticket->attachments ?? [];
     if (!is_array($attachments)) $attachments = [];
 
+    $myId = auth()->id();
+    $is_my_ticket = $myId !== null && (int) ($ticket->user_id ?? 0) === (int) $myId;
+
     $messages = $messages ?? collect();
     $tags = $tags ?? collect();
     if (!($tags instanceof \Illuminate\Support\Collection)) $tags = collect($tags);
@@ -156,7 +159,7 @@
 
           <div class="panel-body thread">
             <!-- Requester message -->
-            <article class="msg requester">
+            <article class="msg requester {{ $is_my_ticket ? 'me' : '' }}">
               <div class="msg-aside">
                 <div class="avatar soft">{{ $initials }}</div>
               </div>
@@ -206,6 +209,8 @@
                   $mRole = strtolower((string) ($m->user_role ?? 'user'));
                   $mIsStaff = in_array($mRole, ['admin', 'it'], true);
                   $mType = (string) ($m->message_type ?? 'public');
+
+                  $mIsMe = $myId !== null && (int) ($m->user_id ?? 0) === (int) $myId;
                 @endphp
 
                 @if ($mType === 'system')
@@ -224,7 +229,7 @@
                     </div>
                   </article>
                 @else
-                  <article class="msg {{ $mIsStaff ? 'agent' : 'requester' }}">
+                  <article class="msg {{ $mIsStaff ? 'agent' : 'requester' }} {{ $mIsMe ? 'me' : '' }}">
                     <div class="msg-aside">
                       <div class="avatar {{ $mIsStaff ? 'agent' : 'soft' }}">{{ $mInitials }}</div>
                     </div>

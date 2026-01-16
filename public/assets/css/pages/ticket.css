@@ -202,13 +202,19 @@
 .muted { color: #6b7280 }
 
 /* Messages */
-.thread { display: grid; gap: 12px }
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+}
 
 .msg {
-  display: grid;
-  grid-template-columns: 42px 1fr;
+  display: flex;
   gap: 10px;
-  align-items: start;
+  align-items: flex-start;
+  width: 100%;
 }
 .msg .avatar {
   width: 42px;
@@ -229,18 +235,60 @@
   background: #ffffff;
   border: 1px solid #eeeeee;
   border-left: 4px solid #e3defa;
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 14px;
+  padding: 12px 14px;
   color: #1f2937;
   box-shadow: 0 4px 12px rgba(17, 24, 39, .06);
+  display: inline-block;
+  max-width: min(640px, 82%);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
+
+.msg-body p {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  line-height: 1.35;
+}
+
+.msg-body p:first-child {
+  margin-top: 0;
+}
+
 .msg.agent .msg-body { border-left-color: #9aa4ff }
+
+/* Chat-style alignment: my messages on the right */
+.msg.me {
+  flex-direction: row-reverse;
+}
+
+.msg.me .msg-body {
+  margin-left: auto;
+  border-left: 1px solid #eeeeee;
+  border-right: 4px solid #c7b8ff;
+  background: #f5f2ff;
+}
+
+.msg.me .msg-top {
+  justify-content: flex-end;
+  text-align: right;
+}
 
 .msg-top {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
   align-items: baseline;
   margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.msg-top strong {
+  font-weight: 900;
+}
+
+.msg-top .muted {
+  font-size: 12px;
 }
 
 .attachments {
