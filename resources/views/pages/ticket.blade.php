@@ -131,8 +131,9 @@
       </section>
 
       @if (session('status'))
-        <div class="panel" role="status" style="border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;">
-          {{ session('status') }}
+        <div class="alert alert-success" role="status">
+          <i class='bx bx-check-circle'></i>
+          <span>{{ session('status') }}</span>
         </div>
       @endif
 
@@ -158,6 +159,11 @@
           </div>
 
           <div class="panel-body thread">
+            <div class="sys-msg">
+              <span>Ticket created</span>
+              <span class="muted">{{ optional($ticket->created_at)->diffForHumans() }}</span>
+            </div>
+
             <!-- Requester message -->
             <article class="msg requester {{ $is_my_ticket ? 'me' : '' }}">
               <div class="msg-aside">
@@ -214,6 +220,39 @@
                 @endphp
 
                 @if ($mType === 'system')
+                  @php
+                    $body = (string) ($m->body ?? '');
+                    $who = trim(($mFirst ?? '').' '.($mLast ?? ''));
+                    if ($who === '') $who = 'User #'.($m->user_id ?? '');
+
+                    $sysText = 'Update';
+                    if ($body === 'TICKET_CREATED') {
+                      $sysText = 'Ticket created';
+                    } elseif (str_starts_with($body, 'ASSIGNED_TO:')) {
+                      $sysText = "Assigned to {$who}";
+                    } elseif (str_starts_with($body, 'STATUS_CHANGED:')) {
+                      $st = trim(substr($body, strlen('STATUS_CHANGED:')));
+                      $label = $st;
+                      if ($st === 'in_progress') $label = 'In Progress';
+                      if ($st === 'open') $label = 'Open';
+                      if ($st === 'resolved') $label = 'Resolved';
+                      if ($st === 'closed') $label = 'Closed';
+                      $sysText = "Status changed to {$label}";
+                    } elseif (str_starts_with($body, 'TAG_ADDED:')) {
+                      $tag = trim(substr($body, strlen('TAG_ADDED:')));
+                      $sysText = "Tag added: {$tag}";
+                    } elseif (str_starts_with($body, 'TAG_REMOVED:')) {
+                      $tag = trim(substr($body, strlen('TAG_REMOVED:')));
+                      $sysText = "Tag removed: {$tag}";
+                    } elseif (str_starts_with($body, 'ATTACHMENT_REMOVED:')) {
+                      $name = trim(substr($body, strlen('ATTACHMENT_REMOVED:')));
+                      $sysText = "Attachment removed: {$name}";
+                    }
+                  @endphp
+                  <div class="sys-msg">
+                    <span>{{ $sysText }}</span>
+                    <span class="muted">{{ optional($m->created_at)->diffForHumans() }}</span>
+                  </div>
                   @continue
                 @endif
 
@@ -256,6 +295,13 @@
                             <li>
                               <i class='bx bx-file'></i>
                               <a href="{{ route('tickets.messageFiles.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener">{{ $name }}</a>
+                              @if ($is_staff)
+                                <form method="POST" action="{{ route('tickets.messageFiles.delete', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
+                                  @csrf
+                                  @method('DELETE')
+                                  <button type="submit" class="icon-btn" title="Remove attachment"><i class='bx bx-trash'></i></button>
+                                </form>
+                              @endif
                             </li>
                             @if ($isImg)
                               <li class="attachment-preview">
@@ -301,8 +347,9 @@
                   <div class="right">
                     @if ($is_staff)
                       <div class="select-pill size-s">
-                        <select name="next_status" aria-label="Next status">
-                          <option value="">Keep status</option>
+                        <select name="status" form="statusForm" aria-label="Update ticket status">
+                          <option value="">Ticket Status</option>
+                          <option value="open">Open</option>
                           <option value="in_progress">Set In Progress</option>
                           <option value="resolved">Mark Resolved</option>
                           <option value="closed">Close</option>
@@ -315,6 +362,13 @@
                 </div>
               </div>
             </form>
+
+            @if ($is_staff)
+              <form id="statusForm" method="POST" action="{{ route('tickets.updateStatus', $ticket->ticket_id) }}" style="display:none;">
+                @csrf
+                @method('PATCH')
+              </form>
+            @endif
           </div>
         </section>
 
@@ -426,7 +480,16 @@
                     $fname = $f->original_name ?? basename((string) ($f->stored_path ?? ''));
                   @endphp
                   <div class="file-row">
-                    <a class="file" href="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ $fname }}</a>
+                    <div class="file-row-head">
+                      <a class="file" href="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ $fname }}</a>
+                      @if ($is_staff)
+                        <form method="POST" action="{{ route('tickets.files.delete', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
+                          @csrf
+                          @method('DELETE')
+                          <button type="submit" class="icon-btn" title="Remove attachment"><i class='bx bx-trash'></i></button>
+                        </form>
+                      @endif
+                    </div>
                     <div class="file-meta muted">Uploaded {{ optional($f->created_at ?? null)->diffForHumans() }} by {{ $uploaderName }}</div>
                   </div>
                 @endforeach
@@ -440,7 +503,17 @@
                 <div class="file-section">
                   <div class="file-section-title muted">Initial attachments</div>
                   @foreach ($attachments as $path)
-                    <a class="file" href="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ basename($path) }}</a>
+                    <div class="file-row-head">
+                      <a class="file" href="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ basename($path) }}</a>
+                      @if ($is_staff)
+                        <form method="POST" action="{{ route('tickets.attachments.delete', $ticket->ticket_id) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
+                          @csrf
+                          @method('DELETE')
+                          <input type="hidden" name="path" value="{{ $path }}">
+                          <button type="submit" class="icon-btn" title="Remove attachment"><i class='bx bx-trash'></i></button>
+                        </form>
+                      @endif
+                    </div>
                   @endforeach
                 </div>
               @endif

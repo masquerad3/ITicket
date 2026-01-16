@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +12,18 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TicketController extends Controller
 {
+    private function createSystemMessage(int $ticketId, string $body): void
+    {
+        try {
+            DB::select(
+                'EXEC dbo.sp_create_ticket_message @ticket_id = ?, @user_id = ?, @message_type = ?, @body = ?',
+                [$ticketId, auth()->id(), 'system', $body]
+            );
+        } catch (\Throwable) {
+            // no-op
+        }
+    }
+
     private function parseDbDatetime(mixed $value): ?Carbon
     {
         if ($value === null || $value === '') {
@@ -73,13 +86,20 @@ class TicketController extends Controller
 
     private function inlineFileResponse(string $storedPath, ?string $filename = null, ?string $mime = null): BinaryFileResponse
     {
-        if ($storedPath === '' || !Storage::disk('public')->exists($storedPath)) {
+        $disk = Storage::disk('public');
+
+        if ($storedPath === '' || !$disk->exists($storedPath)) {
             abort(404);
         }
 
-        $absolutePath = Storage::disk('public')->path($storedPath);
+        $absolutePath = $disk->path($storedPath);
         $filename = $filename ?: basename($storedPath);
-        $mime = $mime ?: (Storage::disk('public')->mimeType($storedPath) ?: 'application/octet-stream');
+        $detectedMime = null;
+        if ($disk instanceof FilesystemAdapter) {
+            $detectedMime = $disk->mimeType($storedPath);
+        }
+
+        $mime = $mime ?: ($detectedMime ?: 'application/octet-stream');
 
         return response()->file($absolutePath, [
             'Content-Type' => $mime,
@@ -265,77 +285,17 @@ class TicketController extends Controller
             if ($type === 'system') {
                 $body = (string) ($m->body ?? '');
                 $text = "Update by {$mName}";
-                if (str_starts_with($body, 'TAG_ADDED:')) {
-                    $tag = trim(substr($body, strlen('TAG_ADDED:')));
-                    $text = "Tag \"{$tag}\" added by {$mName}";
-                } elseif (str_starts_with($body, 'TAG_REMOVED:')) {
-                    $tag = trim(substr($body, strlen('TAG_REMOVED:')));
-                    $text = "Tag \"{$tag}\" removed by {$mName}";
-                }
-
-                $activity->push([
-                    'at' => $m->created_at ?? null,
-                    'text' => $text,
-                ]);
-                continue;
-            }
-
-            $activity->push([
-                'at' => $m->created_at ?? null,
-                'text' => $type === 'internal' ? "Internal note added by {$mName}" : "Reply posted by {$mName}",
-            ]);
-        }
-
-        foreach ($files as $f) {
-            $uploaderName = trim(($f->uploader_first_name ?? '').' '.($f->uploader_last_name ?? ''));
-            if ($uploaderName === '') {
-                $uploaderName = 'User #'.($f->uploaded_by ?? '');
-            }
-            $filename = (string) ($f->original_name ?? basename((string) ($f->stored_path ?? '')));
-
-            $activity->push([
-                'at' => $f->created_at ?? null,
-                'text' => "Attachment uploaded by {$uploaderName} ({$filename})",
-            ]);
-        }
-
-        $activity = $activity
-            ->filter(fn ($a) => !empty($a['at']))
-            ->sortByDesc(fn ($a) => $a['at'])
-            ->take(20)
-            ->values();
-
-        return view('pages.ticket', ['ticket' => $row, 'messages' => $messages, 'tags' => $tags, 'files' => $files, 'activity' => $activity]);
-
-        if (!empty($row->assigned_at) && !empty($row->assigned_to)) {
-            $assigneeName = trim(($row->assignee_first_name ?? '').' '.($row->assignee_last_name ?? ''));
-            if ($assigneeName === '') {
-                $assigneeName = 'User #'.$row->assigned_to;
-            }
-            $activity->push([
-                'at' => $row->assigned_at,
-                'text' => "Assigned to {$assigneeName}",
-            ]);
-        }
-
-        if (!empty($row->resolved_at)) {
-            $activity->push([
-                'at' => $row->resolved_at,
-                'text' => 'Marked resolved',
-            ]);
-        }
-
-        foreach ($messages as $m) {
-            $mName = trim(($m->user_first_name ?? '').' '.($m->user_last_name ?? ''));
-            if ($mName === '') {
-                $mName = 'User #'.($m->user_id ?? '');
-            }
-            $type = (string) ($m->message_type ?? 'public');
-
-            if ($type === 'system') {
-                $body = (string) ($m->body ?? '');
-                $text = "Update by {$mName}";
-                if (str_starts_with($body, 'TAG_ADDED:')) {
+                if ($body === 'TICKET_CREATED') {
+                    $text = "Ticket created by {$mName}";
+                } elseif (str_starts_with($body, 'ASSIGNED_TO:')) {
+                    $text = "Ticket assigned by {$mName}";
+                } elseif (str_starts_with($body, 'STATUS_CHANGED:')) {
+                    $st = trim(substr($body, strlen('STATUS_CHANGED:')));
+                    $text = "Status changed to {$st} by {$mName}";
+                } elseif (str_starts_with($body, 'ATTACHMENT_REMOVED:')) {
+                    $name = trim(substr($body, strlen('ATTACHMENT_REMOVED:')));
+                    $text = "Attachment removed by {$mName} ({$name})";
+                } elseif (str_starts_with($body, 'TAG_ADDED:')) {
                     $tag = trim(substr($body, strlen('TAG_ADDED:')));
                     $text = "Tag \"{$tag}\" added by {$mName}";
                 } elseif (str_starts_with($body, 'TAG_REMOVED:')) {
@@ -522,6 +482,8 @@ class TicketController extends Controller
                 'EXEC dbo.sp_update_ticket_status @ticket_id=?, @status=?',
                 [$ticket, $validated['next_status']]
             );
+
+            $this->createSystemMessage($ticket, 'STATUS_CHANGED:'.$validated['next_status']);
         }
 
         return redirect()
@@ -627,6 +589,8 @@ class TicketController extends Controller
             [$ticket, auth()->id()]
         );
 
+        $this->createSystemMessage($ticket, 'ASSIGNED_TO:'.(string) auth()->id());
+
         return redirect()
             ->route('tickets.show', $ticket)
             ->with('status', 'Ticket assigned successfully.');
@@ -646,6 +610,8 @@ class TicketController extends Controller
             'EXEC dbo.sp_update_ticket_status @ticket_id=?, @status=?',
             [$ticket, $validated['status']]
         );
+
+        $this->createSystemMessage($ticket, 'STATUS_CHANGED:'.$validated['status']);
 
         return redirect()
             ->route('tickets.show', $ticket)
@@ -699,8 +665,134 @@ class TicketController extends Controller
             );
         }
 
+        $this->createSystemMessage($ticketId, 'TICKET_CREATED');
+
         return redirect()
             ->route('tickets.index')
             ->with('status', 'Ticket submitted successfully.');
+    }
+
+    public function deleteFile(int $ticket, int $file): RedirectResponse
+    {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
+        $this->getAuthorizedTicketRow($ticket);
+
+        $row = null;
+        try {
+            $files = collect(DB::select('EXEC dbo.sp_read_ticket_files_by_ticket @ticket_id = ?', [$ticket]));
+            $row = $files->firstWhere('file_id', $file);
+        } catch (\Throwable) {
+            $row = null;
+        }
+
+        if (!$row) {
+            return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment not found.');
+        }
+
+        try {
+            DB::select('EXEC dbo.sp_delete_ticket_file @ticket_id = ?, @file_id = ?', [$ticket, $file]);
+        } catch (\Throwable) {
+            // no-op
+        }
+
+        $path = (string) ($row->stored_path ?? '');
+        if ($path !== '' && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+
+        $this->createSystemMessage($ticket, 'ATTACHMENT_REMOVED:'.((string) ($row->original_name ?? basename($path))));
+
+        return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment removed.');
+    }
+
+    public function deleteMessageFile(int $ticket, int $file): RedirectResponse
+    {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
+        $this->getAuthorizedTicketRow($ticket);
+
+        $match = null;
+        try {
+            $rows = collect(DB::select('EXEC dbo.sp_read_ticket_message_files_by_ticket @ticket_id = ?', [$ticket]));
+            $match = $rows->firstWhere('file_id', $file);
+        } catch (\Throwable) {
+            $match = null;
+        }
+
+        if (!$match) {
+            return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment not found.');
+        }
+
+        try {
+            DB::select('EXEC dbo.sp_delete_ticket_message_file @ticket_id = ?, @file_id = ?', [$ticket, $file]);
+        } catch (\Throwable) {
+            // no-op
+        }
+
+        $path = (string) ($match->stored_path ?? '');
+        if ($path !== '' && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+
+        $this->createSystemMessage($ticket, 'ATTACHMENT_REMOVED:'.((string) ($match->original_name ?? basename($path))));
+
+        return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment removed.');
+    }
+
+    public function deleteLegacyAttachment(Request $request, int $ticket): RedirectResponse
+    {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
+        $row = $this->getAuthorizedTicketRow($ticket);
+
+        $validated = $request->validate([
+            'path' => ['required', 'string'],
+        ]);
+
+        $path = trim((string) $validated['path']);
+        if ($path === '' || str_contains($path, '..') || str_starts_with($path, '/') || str_starts_with($path, '\\')) {
+            abort(404);
+        }
+        if (!str_starts_with($path, 'tickets/'.$ticket.'/')) {
+            abort(404);
+        }
+
+        $attachments = [];
+        if (isset($row->attachments) && $row->attachments !== null && $row->attachments !== '') {
+            $decoded = json_decode((string) $row->attachments, true);
+            if (is_array($decoded)) {
+                $attachments = $decoded;
+            }
+        }
+
+        if (!in_array($path, $attachments, true)) {
+            return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment not found.');
+        }
+
+        $attachments = array_values(array_filter($attachments, fn ($p) => (string) $p !== $path));
+
+        try {
+            DB::select(
+                'EXEC dbo.sp_update_ticket_attachments @ticket_id=?, @attachments=?',
+                [$ticket, json_encode($attachments)]
+            );
+        } catch (\Throwable) {
+            // no-op
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+
+        $this->createSystemMessage($ticket, 'ATTACHMENT_REMOVED:'.basename($path));
+
+        return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment removed.');
     }
 }

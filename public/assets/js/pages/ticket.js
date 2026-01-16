@@ -5,6 +5,9 @@
   const messageType = document.getElementById('messageType');
   const tabs = Array.from(document.querySelectorAll('.compose-tabs .tab-btn'));
 
+  const statusForm = document.getElementById('statusForm');
+  const statusSelect = document.querySelector('select[form="statusForm"][name="status"]');
+
   const composerAttachBtn = document.getElementById('composerAttachBtn');
   const composerFilesInput = document.getElementById('composerFilesInput');
   const composerFilesHint = document.getElementById('composerFilesHint');
@@ -53,6 +56,22 @@
     uploadInput.addEventListener('change', () => {
       if (uploadInput.files && uploadInput.files.length > 0) {
         uploadForm.submit();
+      }
+    });
+  }
+
+  if (statusForm && statusSelect) {
+    statusSelect.addEventListener('change', () => {
+      const val = (statusSelect.value || '').trim();
+      if (!val) return;
+
+      statusSelect.disabled = true;
+
+      // Use requestSubmit when available (better), fallback to submit.
+      if (typeof statusForm.requestSubmit === 'function') {
+        statusForm.requestSubmit();
+      } else {
+        statusForm.submit();
       }
     });
   }

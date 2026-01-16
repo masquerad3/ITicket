@@ -78,6 +78,10 @@ Route::middleware('auth')->group(function () {
         Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.updateStatus');
         Route::post('/tickets/{ticket}/tags', [TicketController::class, 'addTag'])->name('tickets.tags.store');
         Route::delete('/tickets/{ticket}/tags', [TicketController::class, 'removeTag'])->name('tickets.tags.delete');
+
+        Route::delete('/tickets/{ticket}/attachments', [TicketController::class, 'deleteLegacyAttachment'])->name('tickets.attachments.delete');
+        Route::delete('/tickets/{ticket}/files/{file}', [TicketController::class, 'deleteFile'])->whereNumber('file')->name('tickets.files.delete');
+        Route::delete('/tickets/{ticket}/message-files/{file}', [TicketController::class, 'deleteMessageFile'])->whereNumber('file')->name('tickets.messageFiles.delete');
     });
 
     Route::get('/knowledge', fn () => view('pages.knowledge'))->name('knowledge');
