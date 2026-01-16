@@ -6,11 +6,21 @@
   </div>
 
   <div class="menu-content">
+    @php
+      $role = strtolower((string) (auth()->user()?->role ?? 'user'));
+      $is_staff = in_array($role, ['admin', 'it'], true);
+
+      $ticketsLabel = $is_staff ? 'Ticket Queue' : 'My Tickets';
+      $ticketsHref = $is_staff
+        ? route('tickets.index', ['view' => 'queue'])
+        : route('tickets.index');
+    @endphp
+
     <nav class="menu-group">
       <h4 class="group-title">Main Menu</h4>
       <!-- Use the @class directive to conditionally add the 'active' class based on the current route -->
       <a @class(['menu-link', 'active' => request()->routeIs('dashboard')]) href="{{ route('dashboard') }}"><i class='bx bx-home'></i> Dashboard</a>
-      <a @class(['menu-link', 'active' => request()->routeIs('tickets.index') || request()->routeIs('tickets.show') || request()->routeIs('ticket')]) href="{{ route('tickets.index') }}"><i class='bx bx-list-check'></i> My Ticket</a>
+      <a @class(['menu-link', 'active' => request()->routeIs('tickets.index') || request()->routeIs('tickets.show') || request()->routeIs('ticket')]) href="{{ $ticketsHref }}"><i class='bx bx-list-check'></i> {{ $ticketsLabel }}</a>
       <a @class(['menu-link', 'active' => request()->routeIs('tickets.create')]) href="{{ route('tickets.create') }}"><i class='bx bx-plus-circle'></i> Create Ticket</a>
     </nav>
 
@@ -26,10 +36,6 @@
       <a @class(['menu-link', 'active' => request()->routeIs('profile')]) href="{{ route('profile') }}"><i class='bx bx-user-circle'></i> Profile</a>
       <a @class(['menu-link', 'active' => request()->routeIs('settings')]) href="{{ route('settings') }}"><i class='bx bx-cog'></i> Settings</a>
     </nav>
-
-    @php
-      $role = strtolower((string) (auth()->user()?->role ?? 'user'));
-    @endphp
 
     @if ($role === 'admin')
       <nav class="menu-group">

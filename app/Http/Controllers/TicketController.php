@@ -34,11 +34,35 @@ class TicketController extends Controller
         return in_array($role, ['it', 'admin'], true);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $tickets = $this->isStaff()
-            ? collect(DB::select('EXEC dbo.sp_read_all_tickets'))
-            : collect(DB::select('EXEC dbo.sp_read_tickets_by_user @user_id = ?', [auth()->id()]));
+        $view = 'my';
+
+        if ($this->isStaff()) {
+            $candidate = strtolower((string) $request->query('view', 'queue'));
+            $view = in_array($candidate, ['queue', 'mine', 'all'], true) ? $candidate : 'queue';
+        }
+
+        if (!$this->isStaff()) {
+            $tickets = collect(DB::select('EXEC dbo.sp_read_tickets_by_user @user_id = ?', [auth()->id()]));
+        } else {
+            try {
+                if ($view === 'all') {
+                    $tickets = collect(DB::select('EXEC dbo.sp_read_all_tickets'));
+                } elseif ($view === 'mine') {
+                    $tickets = collect(DB::select('EXEC dbo.sp_read_tickets_assigned_to_user @assigned_to = ?', [auth()->id()]));
+                } else {
+                    // queue = unassigned + assigned-to-me
+                    $unassigned = collect(DB::select('EXEC dbo.sp_read_unassigned_tickets'));
+                    $mine = collect(DB::select('EXEC dbo.sp_read_tickets_assigned_to_user @assigned_to = ?', [auth()->id()]));
+                    $tickets = $unassigned->concat($mine)->unique('ticket_id')->values();
+                }
+            } catch (\Throwable) {
+                // If the queue procedures haven't been installed yet, fall back safely.
+                $tickets = collect(DB::select('EXEC dbo.sp_read_all_tickets'));
+                $view = 'all';
+            }
+        }
 
         $tickets = $tickets
             ->map(fn ($row) => $this->normalizeTicketTimestamps($row))
@@ -51,7 +75,7 @@ class TicketController extends Controller
             'resolved' => $tickets->where('status', 'resolved')->count(),
         ];
 
-        return view('pages.tickets', compact('tickets', 'counts'));
+        return view('pages.tickets', compact('tickets', 'counts', 'view'));
     }
 
     public function create()

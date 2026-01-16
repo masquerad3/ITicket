@@ -51,9 +51,34 @@
             @php
               $role = strtolower((string) (auth()->user()?->role ?? 'user'));
               $is_staff = in_array($role, ['admin', 'it'], true);
+              $view = $view ?? ($is_staff ? strtolower((string) request()->query('view', 'queue')) : 'my');
+              if (!$is_staff) $view = 'my';
+
+              $title = 'My Tickets';
+              $subtitle = 'View and manage all your submitted tickets';
+              if ($is_staff) {
+                if ($view === 'all') {
+                  $title = 'All Tickets';
+                  $subtitle = 'View and manage all submitted tickets';
+                } elseif ($view === 'mine') {
+                  $title = 'My Assigned Tickets';
+                  $subtitle = 'Tickets currently assigned to you';
+                } else {
+                  $title = 'Ticket Queue';
+                  $subtitle = 'Unassigned tickets plus tickets assigned to you';
+                }
+              }
             @endphp
-            <h2>{{ $is_staff ? 'All Tickets' : 'My Tickets' }}</h2>
-            <p class="muted">{{ $is_staff ? 'View and manage all submitted tickets' : 'View and manage all your submitted tickets' }}</p>
+            <h2>{{ $title }}</h2>
+            <p class="muted">{{ $subtitle }}</p>
+
+            @if ($is_staff)
+              <nav class="ticket-tabs" aria-label="Ticket views">
+                <a @class(['ticket-tab', 'is-active' => $view === 'queue']) href="{{ route('tickets.index', ['view' => 'queue']) }}">Queue</a>
+                <a @class(['ticket-tab', 'is-active' => $view === 'mine']) href="{{ route('tickets.index', ['view' => 'mine']) }}">Mine</a>
+                <a @class(['ticket-tab', 'is-active' => $view === 'all']) href="{{ route('tickets.index', ['view' => 'all']) }}">All</a>
+              </nav>
+            @endif
         </div>
         <div class="page-header-actions">
           <a class="btn-primary header-cta" href="{{ route('tickets.create') }}"><i class='bx bx-plus'></i> New Ticket</a>
