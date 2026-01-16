@@ -26,5 +26,16 @@
       <a @class(['menu-link', 'active' => request()->routeIs('profile')]) href="{{ route('profile') }}"><i class='bx bx-user-circle'></i> Profile</a>
       <a @class(['menu-link', 'active' => request()->routeIs('settings')]) href="{{ route('settings') }}"><i class='bx bx-cog'></i> Settings</a>
     </nav>
+
+    @php
+      $role = strtolower((string) (auth()->user()?->role ?? 'user'));
+    @endphp
+
+    @if ($role === 'admin')
+      <nav class="menu-group">
+        <h4 class="group-title">Admin</h4>
+        <a @class(['menu-link', 'active' => request()->routeIs('admin.users.*')]) href="{{ route('admin.users.index') }}"><i class='bx bx-user-voice'></i> Manage Users</a>
+      </nav>
+    @endif
   </div>
 </aside>

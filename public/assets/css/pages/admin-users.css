@@ -1,0 +1,202 @@
+.admin-panel{
+  overflow:hidden;
+}
+
+.admin-panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+
+.head-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  height:26px;
+  padding:0 10px;
+  border-radius:999px;
+  border:1px solid rgba(148, 163, 184, 0.25);
+  background:rgba(15, 23, 42, 0.6);
+  color:#cbd5e1;
+  font-size:12px;
+}
+
+.pill.me{
+  border-color:rgba(59, 130, 246, 0.35);
+  background:rgba(59, 130, 246, 0.12);
+  color:#bfdbfe;
+}
+
+.admin-search{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  height:42px;
+  border-radius:14px;
+  border:1px solid rgba(148, 163, 184, 0.25);
+  background:rgba(15, 23, 42, 0.65);
+  padding:0 14px;
+  min-width:280px;
+}
+
+.admin-search i{
+  font-size:18px;
+  color:#94a3b8;
+}
+
+.admin-search input{
+  width:100%;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#e5e7eb;
+}
+
+.table-wrap{
+  overflow:auto;
+}
+
+.admin-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+.admin-table th,
+.admin-table td{
+  padding:14px 14px;
+  border-bottom:1px solid rgba(148, 163, 184, 0.16);
+  white-space:nowrap;
+  vertical-align:middle;
+}
+
+.admin-table thead th{
+  position:sticky;
+  top:0;
+  background:rgba(2, 6, 23, 0.95);
+  color:#e5e7eb;
+  z-index:1;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  font-size:12px;
+}
+
+.admin-table tbody tr:hover{
+  background:rgba(59, 130, 246, 0.06);
+}
+
+.admin-table tbody tr.is-me{
+  background:rgba(59, 130, 246, 0.09);
+}
+
+.mono{
+  font-variant-numeric:tabular-nums;
+}
+
+.name-cell{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.name-cell .name{
+  font-weight:600;
+  color:#e5e7eb;
+}
+
+.role-badge{
+  display:inline-flex;
+  align-items:center;
+  height:24px;
+  padding:0 10px;
+  border-radius:999px;
+  font-size:12px;
+  border:1px solid rgba(148, 163, 184, 0.25);
+  margin-right:10px;
+}
+
+.role-admin{
+  border-color:rgba(245, 158, 11, 0.45);
+  background:rgba(245, 158, 11, 0.12);
+  color:#fde68a;
+}
+
+.role-it{
+  border-color:rgba(34, 197, 94, 0.45);
+  background:rgba(34, 197, 94, 0.10);
+  color:#bbf7d0;
+}
+
+.role-user{
+  border-color:rgba(148, 163, 184, 0.35);
+  background:rgba(148, 163, 184, 0.08);
+  color:#e2e8f0;
+}
+
+.row-form{
+  display:inline-flex;
+  gap:10px;
+  align-items:center;
+  margin:0;
+}
+
+.input{
+  height:38px;
+  border-radius:12px;
+  border:1px solid rgba(148, 163, 184, 0.28);
+  background:rgba(15, 23, 42, 0.75);
+  color:#e5e7eb;
+  padding:0 12px;
+}
+
+.btn-small{
+  padding:9px 12px;
+  font-size:14px;
+}
+
+.toggle{
+  display:inline-flex;
+  align-items:center;
+}
+
+.toggle input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.toggle .track{
+  width:46px;
+  height:26px;
+  border-radius:999px;
+  border:1px solid rgba(148, 163, 184, 0.30);
+  background:rgba(148, 163, 184, 0.10);
+  position:relative;
+  transition:background 150ms ease, border-color 150ms ease;
+}
+
+.toggle .thumb{
+  position:absolute;
+  top:3px;
+  left:3px;
+  width:20px;
+  height:20px;
+  border-radius:999px;
+  background:#e5e7eb;
+  transition:transform 150ms ease;
+}
+
+.toggle input:checked + .track{
+  border-color:rgba(34, 197, 94, 0.55);
+  background:rgba(34, 197, 94, 0.18);
+}
+
+.toggle input:checked + .track .thumb{
+  transform:translateX(20px);
+}

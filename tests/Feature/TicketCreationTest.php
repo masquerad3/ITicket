@@ -6,6 +6,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -15,6 +16,10 @@ class TicketCreationTest extends TestCase
 
     public function test_user_can_create_ticket(): void
     {
+        if (DB::connection()->getDriverName() !== 'sqlsrv') {
+            $this->markTestSkipped('Ticket creation uses SQL Server stored procedures; run this test with DB_CONNECTION=sqlsrv.');
+        }
+
         Storage::fake('public');
 
         $user = User::factory()->create();
@@ -31,7 +36,7 @@ class TicketCreationTest extends TestCase
                 'contact' => 'email',
                 'consent' => '1',
                 'files' => [
-                    UploadedFile::fake()->image('screenshot.jpg'),
+                    UploadedFile::fake()->create('notes.txt', 10, 'text/plain'),
                 ],
             ]);
 

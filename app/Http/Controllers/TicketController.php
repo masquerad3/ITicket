@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class TicketController extends Controller
@@ -18,15 +18,9 @@ class TicketController extends Controller
 
     public function index()
     {
-        $query = Ticket::query()->with(['assignee', 'requester']);
-
-        if (!$this->isStaff()) {
-            $query->where('user_id', auth()->id());
-        }
-
-        $tickets = $query
-            ->latest('created_at')
-            ->get();
+        $tickets = $this->isStaff()
+            ? collect(DB::select('EXEC dbo.sp_read_all_tickets'))
+            : collect(DB::select('EXEC dbo.sp_read_tickets_by_user @user_id = ?', [auth()->id()]));
 
         $counts = [
             'total' => $tickets->count(),
@@ -43,40 +37,48 @@ class TicketController extends Controller
         return view('pages.create-ticket');
     }
 
-    public function show(Ticket $ticket)
+    public function show(int $ticket)
     {
-        if (!$this->isStaff() && (int) $ticket->user_id !== (int) auth()->id()) {
+        $rows = DB::select('EXEC dbo.sp_read_ticket_by_id @ticket_id = ?', [$ticket]);
+        $row = $rows[0] ?? null;
+
+        if (!$row) {
             abort(404);
         }
 
-        $ticket->load(['assignee', 'requester']);
+        if (!$this->isStaff() && (int) $row->user_id !== (int) auth()->id()) {
+            abort(404);
+        }
 
-        return view('pages.ticket', compact('ticket'));
+        $attachments = [];
+        if (isset($row->attachments) && $row->attachments !== null && $row->attachments !== '') {
+            $decoded = json_decode((string) $row->attachments, true);
+            if (is_array($decoded)) {
+                $attachments = $decoded;
+            }
+        }
+        $row->attachments = $attachments;
+
+        return view('pages.ticket', ['ticket' => $row]);
     }
 
-    public function assignToMe(Ticket $ticket): RedirectResponse
+    public function assignToMe(int $ticket): RedirectResponse
     {
         if (!$this->isStaff()) {
             abort(403);
         }
 
-        if ($ticket->assigned_to === null) {
-            $ticket->assigned_to = auth()->id();
-            $ticket->assigned_at = now();
-        }
-
-        if ($ticket->status === 'open') {
-            $ticket->status = 'in_progress';
-        }
-
-        $ticket->save();
+        DB::select(
+            'EXEC dbo.sp_assign_ticket_to_user @ticket_id=?, @assigned_to=?',
+            [$ticket, auth()->id()]
+        );
 
         return redirect()
             ->route('tickets.show', $ticket)
             ->with('status', 'Ticket assigned successfully.');
     }
 
-    public function updateStatus(Request $request, Ticket $ticket): RedirectResponse
+    public function updateStatus(Request $request, int $ticket): RedirectResponse
     {
         if (!$this->isStaff()) {
             abort(403);
@@ -86,17 +88,10 @@ class TicketController extends Controller
             'status' => ['required', 'string', 'in:open,in_progress,resolved,closed'],
         ]);
 
-        $ticket->status = $validated['status'];
-
-        if ($ticket->status === 'resolved') {
-            $ticket->resolved_at = now();
-        }
-
-        if ($ticket->status !== 'resolved') {
-            $ticket->resolved_at = null;
-        }
-
-        $ticket->save();
+        DB::select(
+            'EXEC dbo.sp_update_ticket_status @ticket_id=?, @status=?',
+            [$ticket, $validated['status']]
+        );
 
         return redirect()
             ->route('tickets.show', $ticket)
@@ -118,26 +113,36 @@ class TicketController extends Controller
             'files.*' => ['file', 'max:10240', 'mimes:png,jpg,jpeg,pdf,doc,docx,txt'],
         ]);
 
-        $ticket = Ticket::create([
-            'user_id' => auth()->id(),
-            'subject' => $validated['subject'],
-            'category' => $validated['category'],
-            'priority' => $validated['priority'],
-            'department' => $validated['department'] ?? null,
-            'location' => $validated['location'] ?? null,
-            'description' => $validated['description'],
-            'preferred_contact' => $validated['contact'],
-            'status' => 'open',
-        ]);
+        $created = DB::select(
+            'EXEC dbo.sp_create_ticket @user_id=?, @subject=?, @category=?, @priority=?, @department=?, @location=?, @description=?, @preferred_contact=?, @status=?',
+            [
+                auth()->id(),
+                $validated['subject'],
+                $validated['category'],
+                $validated['priority'],
+                $validated['department'] ?? null,
+                $validated['location'] ?? null,
+                $validated['description'],
+                $validated['contact'],
+                'open',
+            ]
+        );
+
+        $ticketId = (int) (($created[0]->ticket_id ?? 0));
+        if ($ticketId <= 0) {
+            abort(500, 'Failed to create ticket.');
+        }
 
         $storedPaths = [];
         foreach ($request->file('files', []) as $file) {
-            $storedPaths[] = Storage::disk('public')->putFile("tickets/{$ticket->ticket_id}", $file);
+            $storedPaths[] = Storage::disk('public')->putFile("tickets/{$ticketId}", $file);
         }
 
         if (!empty($storedPaths)) {
-            $ticket->attachments = $storedPaths;
-            $ticket->save();
+            DB::select(
+                'EXEC dbo.sp_update_ticket_attachments @ticket_id=?, @attachments=?',
+                [$ticketId, json_encode($storedPaths)]
+            );
         }
 
         return redirect()

@@ -23,20 +23,25 @@
     $role = strtolower((string) ($u?->role ?? 'user'));
     $is_staff = in_array($role, ['admin', 'it'], true);
 
-    $requester = $ticket->requester ?? $u;
-    $assignee = $ticket->assignee;
+    $requesterFirst = $ticket->requester_first_name ?? '';
+    $requesterLast = $ticket->requester_last_name ?? '';
+    if ($requesterFirst === '' && $u !== null) $requesterFirst = $u->first_name ?? '';
+    if ($requesterLast === '' && $u !== null) $requesterLast = $u->last_name ?? '';
+
+    $assigneeFirst = $ticket->assignee_first_name ?? '';
+    $assigneeLast = $ticket->assignee_last_name ?? '';
 
     $first = '';
     $last = '';
-    if ($requester !== null && !empty($requester->first_name)) $first = strtoupper(substr($requester->first_name, 0, 1));
-    if ($requester !== null && !empty($requester->last_name)) $last = strtoupper(substr($requester->last_name, 0, 1));
+    if (!empty($requesterFirst)) $first = strtoupper(substr($requesterFirst, 0, 1));
+    if (!empty($requesterLast)) $last = strtoupper(substr($requesterLast, 0, 1));
     $initials = $first . $last;
     if ($initials === '') $initials = 'U';
 
     $assigneeInitials = '—';
-    if ($assignee !== null) {
-      $af = !empty($assignee->first_name) ? strtoupper(substr($assignee->first_name, 0, 1)) : '';
-      $al = !empty($assignee->last_name) ? strtoupper(substr($assignee->last_name, 0, 1)) : '';
+    if (!empty($assigneeFirst) || !empty($assigneeLast)) {
+      $af = !empty($assigneeFirst) ? strtoupper(substr($assigneeFirst, 0, 1)) : '';
+      $al = !empty($assigneeLast) ? strtoupper(substr($assigneeLast, 0, 1)) : '';
       $assigneeInitials = trim($af . $al) !== '' ? ($af . $al) : 'IT';
     }
 
@@ -96,13 +101,13 @@
 
           @if ($is_staff)
             @if (($ticket->assigned_to ?? null) === null)
-              <form method="POST" action="{{ route('tickets.assignToMe', $ticket) }}" style="display:inline;">
+              <form method="POST" action="{{ route('tickets.assignToMe', $ticket->ticket_id) }}" style="display:inline;">
                 @csrf
                 <button type="submit" class="btn-soft"><i class='bx bx-user-check'></i> Assign to me</button>
               </form>
             @endif
 
-            <form method="POST" action="{{ route('tickets.updateStatus', $ticket) }}" style="display:inline;">
+            <form method="POST" action="{{ route('tickets.updateStatus', $ticket->ticket_id) }}" style="display:inline;">
               @csrf
               @method('PATCH')
               <input type="hidden" name="status" value="resolved">
@@ -144,7 +149,7 @@
               </div>
               <div class="msg-body">
                 <div class="msg-top">
-                  <strong>{{ $requester?->first_name }} {{ $requester?->last_name }}</strong>
+                  <strong>{{ $requesterFirst }} {{ $requesterLast }}</strong>
                   <span class="muted">Requester • {{ optional($ticket->created_at)->diffForHumans() }}</span>
                 </div>
                 <p>{{ $ticket->description }}</p>
@@ -260,7 +265,7 @@
                 <div class="p-who">
                   <div class="avatar soft">{{ $initials }}</div>
                   <div>
-                    <strong>{{ $requester?->first_name }} {{ $requester?->last_name }}</strong>
+                    <strong>{{ $requesterFirst }} {{ $requesterLast }}</strong>
                     <p class="muted">Requester</p>
                   </div>
                 </div>
@@ -271,7 +276,10 @@
                   <div class="avatar agent">{{ $assigneeInitials }}</div>
                   <div>
                     <strong>
-                      {{ $assignee?->first_name ? ($assignee->first_name.' '.$assignee->last_name) : (($ticket->assigned_to ?? null) ? 'User #'.$ticket->assigned_to : 'Unassigned') }}
+                      @php
+                        $assigneeName = trim(($assigneeFirst ?? '').' '.($assigneeLast ?? ''));
+                      @endphp
+                      {{ $assigneeName !== '' ? $assigneeName : (($ticket->assigned_to ?? null) ? 'User #'.$ticket->assigned_to : 'Unassigned') }}
                     </strong>
                     <p class="muted">Assignee</p>
                   </div>

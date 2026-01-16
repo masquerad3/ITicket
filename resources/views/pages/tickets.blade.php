@@ -158,7 +158,7 @@
 
                 <article class="ticket-card">
                   <header class="tcard-head">
-                    <a class="ticket-id" href="{{ route('tickets.show', $t) }}">{{ $displayId }}</a>
+                    <a class="ticket-id" href="{{ route('tickets.show', $t->ticket_id) }}">{{ $displayId }}</a>
                     <div class="badges">
                       <span @class([
                         'chip',
@@ -183,12 +183,18 @@
                     <span class="meta">{{ optional($t->created_at)->diffForHumans() }}</span>
                     <span class="dot">•</span>
                     <span class="meta">
-                      {{ $t->assignee?->first_name ? ($t->assignee->first_name.' '.$t->assignee->last_name) : ($t->assigned_to ? 'User #'.$t->assigned_to : 'Unassigned') }}
+                      @php
+                        $assigneeName = '';
+                        if (!empty($t->assignee_first_name)) {
+                          $assigneeName = trim(($t->assignee_first_name ?? '').' '.($t->assignee_last_name ?? ''));
+                        }
+                      @endphp
+                      {{ $assigneeName !== '' ? $assigneeName : ($t->assigned_to ? 'User #'.$t->assigned_to : 'Unassigned') }}
                     </span>
                     <span class="dot">•</span>
                     <span class="meta">Category: {{ $t->category }}</span>
                     <div class="row-actions">
-                      <a class="action" href="{{ route('tickets.show', $t) }}" title="View"><i class='bx bx-show'></i></a>
+                      <a class="action" href="{{ route('tickets.show', $t->ticket_id) }}" title="View"><i class='bx bx-show'></i></a>
                     </div>
                   </footer>
                 </article>

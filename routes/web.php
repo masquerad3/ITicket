@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route; // Route lets us define website URLs like /login, /register, etc.
@@ -82,4 +83,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     Route::get('/settings', fn () => view('pages.settings'))->name('settings');
+
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::patch('/users/{user}', [AdminUserController::class, 'update'])->whereNumber('user')->name('users.update');
+    });
 });
