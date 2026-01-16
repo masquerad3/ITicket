@@ -7,12 +7,12 @@
   <title>ITicket - My Tickets</title>
  
   <!-- Global/base (reset, utilities, shared patterns) -->
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
   <!-- Shared component styles -->
-  <link rel="stylesheet" href="assets/css/components/topbar.css">
-  <link rel="stylesheet" href="assets/css/components/sidebar.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/components/topbar.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/components/sidebar.css') }}">
   <!-- Page styles -->
-  <link rel="stylesheet" href="assets/css/pages/tickets.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/pages/tickets.css') }}">
   
   <!-- Icons -->
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
@@ -56,22 +56,28 @@
         </div>
       </header>
 
+      @if (session('status'))
+        <div class="panel" role="status" style="border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;">
+          {{ session('status') }}
+        </div>
+      @endif
+
       <!-- Ticket Counters -->
       <section class="counter">
         <div class="counter-card counter-total">
-          <div class="counter-value">17</div>
+          <div class="counter-value">{{ $counts['total'] ?? 0 }}</div>
           <div class="counter-label">Total Tickets</div>
         </div>
         <div class="counter-card counter-open">
-          <div class="counter-value">3</div>
+          <div class="counter-value">{{ $counts['open'] ?? 0 }}</div>
           <div class="counter-label">Open Tickets</div>
         </div>
         <div class="counter-card counter-progress">
-          <div class="counter-value">2</div>
+          <div class="counter-value">{{ $counts['progress'] ?? 0 }}</div>
           <div class="counter-label">In Progress</div>
         </div>
         <div class="counter-card counter-resolved">
-          <div class="counter-value">12</div>
+          <div class="counter-value">{{ $counts['resolved'] ?? 0 }}</div>
           <div class="counter-label">Resolved</div>
         </div>
       </section>
@@ -122,7 +128,7 @@
       <section class="panel tickets-panel">
         <div class="panel-head">
           <div class="results-left">
-            <strong>Showing 8 Tickets</strong>
+            <strong>Showing {{ isset($tickets) ? $tickets->count() : 0 }} Tickets</strong>
           </div>
           <div class="pager">
             <button class="btn-pager" disabled><i class='bx bx-chevron-left'></i> Prev</button>
@@ -133,80 +139,55 @@
 
         <div class="panel-body">
           <div class="tickets-list">
-            <!-- Card 1 -->
-            <article class="ticket-card">
-              <header class="tcard-head">
-                <a class="ticket-id" href="{{ route('ticket') }}">#TKT-1245</a>
-                <div class="badges">
-                  <span class="chip chip-high">High Priority</span>
-                  <span class="status status-open">Open</span>
-                </div>
-              </header>
-              <div class="tcard-body">
-                <h4 class="t-subject">Cannot Access Email Account</h4>
-                <p class="t-desc">I've been unable to log into my email since this morning. Getting "Invalid credentials" error even though I'm using the correct password.</p>
-              </div>
-              <footer class="tcard-foot">
-                <span class="meta">2 hours ago</span>
-                <span class="dot">•</span>
-                <span class="meta">Assigned to Prince Remo</span>
-                <span class="dot">•</span>
-                <span class="meta">Category: Email</span>
-                <div class="row-actions">
-                  <a class="action" href="{{ route('ticket') }}" title="View"><i class='bx bx-show'></i></a>
-                </div>
-              </footer>
-            </article>
+            @if (isset($tickets) && $tickets->count() > 0)
+              @foreach ($tickets as $t)
+                @php
+                  $displayId = '#TKT-' . $t->ticket_id;
 
-            <!-- Card 2 -->
-            <article class="ticket-card">
-              <header class="tcard-head">
-                <a class="ticket-id" href="{{ route('ticket') }}">#TKT-1243</a>
-                <div class="badges">
-                  <span class="chip chip-medium">Medium Priority</span>
-                  <span class="status status-progress">In Progress</span>
-                </div>
-              </header>
-              <div class="tcard-body">
-                <h4 class="t-subject">Printer Not Working in Office 3A</h4>
-                <p class="t-desc">The printer keeps showing "Paper Jam" error but there's no paper stuck. Already tried restarting it twice.</p>
-              </div>
-              <footer class="tcard-foot">
-                <span class="meta">2 hours ago</span>
-                <span class="dot">•</span>
-                <span class="meta">Unassigned</span>
-                <span class="dot">•</span>
-                <span class="meta">Category: Hardware</span>
-                <div class="row-actions">
-                  <a class="action" href="{{ route('ticket') }}" title="View"><i class='bx bx-show'></i></a>
-                </div>
-              </footer>
-            </article>
+                  $statusLabel = 'Open';
+                  if ($t->status === 'in_progress') $statusLabel = 'In Progress';
+                  if ($t->status === 'resolved') $statusLabel = 'Resolved';
+                  if ($t->status === 'closed') $statusLabel = 'Closed';
 
-            <!-- Card 3 -->
-            <article class="ticket-card">
-              <header class="tcard-head">
-                <a class="ticket-id" href="{{ route('ticket') }}">#TKT-1240</a>
-                <div class="badges">
-                  <span class="chip chip-low">Low Priority</span>
-                  <span class="status status-resolved">Resolved</span>
-                </div>
-              </header>
-              <div class="tcard-body">
-                <h4 class="t-subject">Request: Adobe Photoshop Installation</h4>
-                <p class="t-desc">Need Adobe Photoshop installed on my workstation for the upcoming marketing campaign project.</p>
-              </div>
-              <footer class="tcard-foot">
-                <span class="meta">3 days ago</span>
-                <span class="dot">•</span>
-                <span class="meta">Assigned to Municht Esquivel</span>
-                <span class="dot">•</span>
-                <span class="meta">Category: Software</span>
-                <div class="row-actions">
-                  <a class="action" href="{{ route('ticket') }}" title="View"><i class='bx bx-show'></i></a>
-                </div>
-              </footer>
-            </article>
+                  $priorityLabel = $t->priority . ' Priority';
+                @endphp
+
+                <article class="ticket-card">
+                  <header class="tcard-head">
+                    <a class="ticket-id" href="{{ route('ticket') }}">{{ $displayId }}</a>
+                    <div class="badges">
+                      <span @class([
+                        'chip',
+                        'chip-high' => $t->priority === 'High',
+                        'chip-medium' => $t->priority === 'Medium',
+                        'chip-low' => $t->priority === 'Low',
+                      ])>{{ $priorityLabel }}</span>
+                      <span @class([
+                        'status',
+                        'status-open' => $t->status === 'open',
+                        'status-progress' => $t->status === 'in_progress',
+                        'status-resolved' => $t->status === 'resolved',
+                        'status-closed' => $t->status === 'closed',
+                      ])>{{ $statusLabel }}</span>
+                    </div>
+                  </header>
+                  <div class="tcard-body">
+                    <h4 class="t-subject">{{ $t->subject }}</h4>
+                    <p class="t-desc">{{ $t->description }}</p>
+                  </div>
+                  <footer class="tcard-foot">
+                    <span class="meta">{{ optional($t->created_at)->diffForHumans() }}</span>
+                    <span class="dot">•</span>
+                    <span class="meta">Unassigned</span>
+                    <span class="dot">•</span>
+                    <span class="meta">Category: {{ $t->category }}</span>
+                    <div class="row-actions">
+                      <a class="action" href="{{ route('ticket') }}" title="View"><i class='bx bx-show'></i></a>
+                    </div>
+                  </footer>
+                </article>
+              @endforeach
+            @endif
           </div>
         </div>
 
@@ -220,7 +201,7 @@
       </section>
 
       <!-- Empty state (hidden when there are cards) -->
-      <section class="empty-state" hidden>
+      <section class="empty-state" @if (isset($tickets) && $tickets->count() > 0) hidden @endif>
         <div class="empty-card">
           <i class='bx bx-folder-open'></i>
           <h3>No tickets found</h3>
@@ -232,6 +213,6 @@
 
   </div>
 
-  <script src="assets/js/components/sidebar.js"></script>
+  <script src="{{ asset('assets/js/components/sidebar.js') }}"></script>
 </body>
 </html>

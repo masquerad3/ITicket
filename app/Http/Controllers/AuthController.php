@@ -85,7 +85,7 @@ class AuthController extends Controller
             'last_name' => ['required', 'string', 'max:50'],
             'email' => ['required', 'string', 'email', 'max:50'],
             'contact' => ['required', 'string', 'max:15'],
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['required', 'string', 'min:8'],
         ]);
 
         // Hash the password BEFORE storing it.

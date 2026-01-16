@@ -39,6 +39,15 @@
     if ($initials === '') {
         $initials = 'U';
     }
+
+    $status_label = 'Active';
+    $is_active_value = 1;
+    if ($u !== null && $u->is_active !== null) {
+      $is_active_value = (int) $u->is_active;
+    }
+    if ($is_active_value !== 1) {
+      $status_label = 'Inactive';
+    }
   @endphp
 
   <div class="page">
@@ -170,7 +179,7 @@
               <div class="field">
                 <label for="is_active">Status</label>
                 <input id="is_active" name="is_active" type="text" 
-                value="{{ (int)($u?->is_active ?? 1) === 1 ? 'Active' : 'Inactive' }}" readonly>
+                value="{{ $status_label }}" readonly>
               </div>
             </div>
 
@@ -199,10 +208,18 @@
 
   <!-- Change Password Modal -->
   <div class="modal-backdrop" id="pwModalBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pwModalTitle">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pwModalTitle" aria-describedby="pwModalDesc" tabindex="-1">
       <div class="modal-header">
-        <h3 id="pwModalTitle">Change Password</h3>
-        <button class="modal-close" type="button" id="closePwModal" aria-label="Close">&times;</button>
+        <div class="modal-title-wrap">
+          <div class="modal-icon" aria-hidden="true"><i class='bx bx-lock-alt'></i></div>
+          <div>
+            <h3 id="pwModalTitle">Change Password</h3>
+            <p id="pwModalDesc" class="modal-subtitle">Use a strong, unique password you don’t use elsewhere.</p>
+          </div>
+        </div>
+        <button class="modal-close" type="button" id="closePwModal" aria-label="Close">
+          <i class='bx bx-x'></i>
+        </button>
       </div>
 
       <form method="POST" action="{{ route('profile.password.update') }}">
@@ -212,18 +229,36 @@
           <div class="form-grid" style="grid-template-columns: 1fr;">
             <div class="field">
               <label for="current_password">Current Password</label>
-              <input id="current_password" name="current_password" type="password" required>
+              <div class="input-with-icon">
+                <i class='bx bx-key' aria-hidden="true"></i>
+                <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
+                <button class="toggle-pw" type="button" data-toggle-password="current_password" aria-label="Show password">
+                  <i class='bx bx-show' aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
 
             <div class="field">
               <label for="password">New Password</label>
-              <input id="password" name="password" type="password" required>
+              <div class="input-with-icon">
+                <i class='bx bx-lock' aria-hidden="true"></i>
+                <input id="password" name="password" type="password" autocomplete="new-password" required>
+                <button class="toggle-pw" type="button" data-toggle-password="password" aria-label="Show password">
+                  <i class='bx bx-show' aria-hidden="true"></i>
+                </button>
+              </div>
               <small class="hint">Minimum 8 characters.</small>
             </div>
 
             <div class="field">
               <label for="password_confirmation">Confirm New Password</label>
-              <input id="password_confirmation" name="password_confirmation" type="password" required>
+              <div class="input-with-icon">
+                <i class='bx bx-check-shield' aria-hidden="true"></i>
+                <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
+                <button class="toggle-pw" type="button" data-toggle-password="password_confirmation" aria-label="Show password">
+                  <i class='bx bx-show' aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -236,43 +271,7 @@
     </div>
   </div>
 
-  <script src="assets/js/components/sidebar.js"></script>
-  <script>
-    (function () {
-      var openBtn = document.getElementById('openPwModal');
-      var backdrop = document.getElementById('pwModalBackdrop');
-      var closeBtn = document.getElementById('closePwModal');
-      var cancelBtn = document.getElementById('cancelPwModal');
-
-      function openModal() {
-        if (!backdrop) return;
-        backdrop.classList.add('is-open');
-        backdrop.setAttribute('aria-hidden', 'false');
-
-        var firstInput = document.getElementById('current_password');
-        if (firstInput) firstInput.focus();
-      }
-
-      function closeModal() {
-        if (!backdrop) return;
-        backdrop.classList.remove('is-open');
-        backdrop.setAttribute('aria-hidden', 'true');
-      }
-
-      if (openBtn) openBtn.addEventListener('click', openModal);
-      if (closeBtn) closeBtn.addEventListener('click', closeModal);
-      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
-
-      if (backdrop) {
-        backdrop.addEventListener('click', function (e) {
-          if (e.target === backdrop) closeModal();
-        });
-      }
-
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeModal();
-      });
-    })();
-  </script>
+  <script src="{{ asset('assets/js/components/sidebar.js') }}"></script>
+  <script src="{{ asset('assets/js/pages/profile.js') }}"></script>
 </body>
 </html>

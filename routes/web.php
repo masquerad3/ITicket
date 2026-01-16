@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route; // Route lets us define website URLs like /login, /register, etc.
 
 /*
@@ -60,9 +61,10 @@ Route::middleware('auth')->group(function () {
     // If you’re NOT logged in, Laravel redirects you to /login.
     Route::get('/dashboard', fn () => view('pages.dashboard'))->name('dashboard');
  
-    Route::get('/tickets', fn () => view('pages.tickets'))->name('tickets');
+    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets');
     Route::get('/ticket', fn () => view('pages.ticket'))->name('ticket');
-    Route::get('/create-ticket', fn () => view('pages.create-ticket'))->name('create-ticket');
+    Route::get('/create-ticket', [TicketController::class, 'create'])->name('create-ticket');
+    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
 
     Route::get('/knowledge', fn () => view('pages.knowledge'))->name('knowledge');
     Route::get('/knowledge-article', fn () => view('pages.knowledge-article'))->name('knowledge-article');

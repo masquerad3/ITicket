@@ -6,12 +6,12 @@
   <title>ITicket - Ticket #TKT-1245</title>
 
   <!-- Global/base -->
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
   <!-- Shared components -->
-  <link rel="stylesheet" href="assets/css/components/topbar.css">
-  <link rel="stylesheet" href="assets/css/components/sidebar.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/components/topbar.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/components/sidebar.css') }}">
   <!-- Page-specific (refreshed look) -->
-  <link rel="stylesheet" href="assets/css/pages/ticket.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/pages/ticket.css') }}">
 
   <!-- Icons -->
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
@@ -226,7 +226,7 @@
     </main>
   </div>
 
-  <script src="assets/js/components/sidebar.js"></script>
-  <script src="assets/js/pages/ticket.js"></script>
+  <script src="{{ asset('assets/js/components/sidebar.js') }}"></script>
+  <script src="{{ asset('assets/js/pages/ticket.js') }}"></script>
 </body>
 </html>

@@ -34,11 +34,11 @@
     }
   @endphp
 
-<div class="profile-chip">
+<a href="{{ route('profile') }}" class="profile-chip" style="text-decoration:none; color:inherit;">
   <div class="avatar">{{ $initials }}</div>
 
   <div class="user-meta">
     <p class="user-name">{{ $u?->first_name }} {{ $u?->last_name }}</p>
     <p class="user-role">{{ $u?->role }}</p>
   </div>
-</div>
+</a>

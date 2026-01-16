@@ -79,7 +79,7 @@ class ProfileController extends Controller
 
     $request->validate([
       'current_password' => ['required', 'string'],
-      'password' => ['required', 'string', 'min:6', 'confirmed'],
+      'password' => ['required', 'string', 'min:8', 'confirmed'],
     ]);
 
     // Verify the current password matches what is in the DB

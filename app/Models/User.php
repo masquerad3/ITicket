@@ -4,12 +4,14 @@ namespace App\Models;
 
 // This is Laravel's base User class for authentication.
 // It already includes features needed for login/session (it implements "Authenticatable").
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 // Allows this user to receive notifications (email notifications, database notifications, etc.)
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    use HasFactory;
     use Notifiable; // Adds notification-related methods to the User model
 
     // Tell Laravel which DB table this model uses.
