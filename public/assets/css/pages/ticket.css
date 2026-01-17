@@ -308,19 +308,19 @@
 
 .msg.agent .msg-body { border-left-color: #9aa4ff }
 
-/* Chat-style alignment: my messages on the right */
-.msg.me {
+/* Chat-style alignment: other people's messages on the right */
+.msg.them {
   flex-direction: row-reverse;
 }
 
-.msg.me .msg-body {
+.msg.them .msg-body {
   margin-left: auto;
   border-left: 1px solid #eeeeee;
   border-right: 4px solid #c7b8ff;
   background: #f5f2ff;
 }
 
-.msg.me .msg-top {
+.msg.them .msg-top {
   justify-content: flex-end;
   text-align: right;
 }

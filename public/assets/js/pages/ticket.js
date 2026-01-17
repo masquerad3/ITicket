@@ -6,7 +6,8 @@
   const tabs = Array.from(document.querySelectorAll('.compose-tabs .tab-btn'));
 
   const statusForm = document.getElementById('statusForm');
-  const statusSelect = document.querySelector('select[form="statusForm"][name="status"]');
+  const statusSelect = document.getElementById('statusSelect');
+  const statusHidden = document.getElementById('statusHidden');
 
   const composerAttachBtn = document.getElementById('composerAttachBtn');
   const composerFilesInput = document.getElementById('composerFilesInput');
@@ -65,14 +66,13 @@
       const val = (statusSelect.value || '').trim();
       if (!val) return;
 
+      if (statusHidden) {
+        statusHidden.value = val;
+      }
+
       statusSelect.disabled = true;
 
-      // Use requestSubmit when available (better), fallback to submit.
-      if (typeof statusForm.requestSubmit === 'function') {
-        statusForm.requestSubmit();
-      } else {
-        statusForm.submit();
-      }
+      statusForm.submit();
     });
   }
 

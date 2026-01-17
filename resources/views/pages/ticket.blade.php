@@ -159,13 +159,25 @@
           </div>
 
           <div class="panel-body thread">
-            <div class="sys-msg">
-              <span>Ticket created</span>
-              <span class="muted">{{ optional($ticket->created_at)->diffForHumans() }}</span>
-            </div>
+            @php
+              $initialFiles = $files
+                ->filter(fn ($f) => (int) ($f->uploaded_by ?? 0) === (int) ($ticket->user_id ?? 0))
+                ->values();
+
+              $createdSys = $messages
+                ->first(fn ($m) => (string) ($m->message_type ?? '') === 'system' && (string) ($m->body ?? '') === 'TICKET_CREATED');
+              $createdSysId = (int) ($createdSys->message_id ?? 0);
+            @endphp
+
+            @if ($createdSys)
+              <div class="sys-msg">
+                <span>Ticket created</span>
+                <span class="muted">{{ optional($createdSys->created_at ?? null)->diffForHumans() }}</span>
+              </div>
+            @endif
 
             <!-- Requester message -->
-            <article class="msg requester {{ $is_my_ticket ? 'me' : '' }}">
+            <article class="msg requester {{ $is_my_ticket ? '' : 'them' }}">
               <div class="msg-aside">
                 <div class="avatar soft">{{ $initials }}</div>
               </div>
@@ -176,7 +188,31 @@
                 </div>
                 <p>{{ $ticket->description }}</p>
 
-                @if (count($attachments) > 0)
+                @if ($initialFiles->count() > 0)
+                  <ul class="attachments">
+                    @foreach ($initialFiles as $f)
+                      @php
+                        $mime = (string) ($f->mime ?? '');
+                        $isImg = str_starts_with($mime, 'image/');
+                        $name = $f->original_name ?? basename((string) ($f->stored_path ?? ''));
+                      @endphp
+                      <li>
+                        <i class='bx bx-file'></i>
+                        <a href="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener">{{ $name }}</a>
+                      </li>
+                      @if ($isImg)
+                        <li class="attachment-preview">
+                          <details class="img-details">
+                            <summary class="img-summary"></summary>
+                            <a href="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener">
+                              <img class="img-attach" src="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" alt="{{ $name }}">
+                            </a>
+                          </details>
+                        </li>
+                      @endif
+                    @endforeach
+                  </ul>
+                @elseif (count($attachments) > 0)
                   <ul class="attachments">
                     @foreach ($attachments as $path)
                       @php
@@ -218,6 +254,10 @@
 
                   $mIsMe = $myId !== null && (int) ($m->user_id ?? 0) === (int) $myId;
                 @endphp
+
+                @if ($createdSysId > 0 && (int) ($m->message_id ?? 0) === $createdSysId)
+                  @continue
+                @endif
 
                 @if ($mType === 'system')
                   @php
@@ -268,7 +308,7 @@
                     </div>
                   </article>
                 @else
-                  <article class="msg {{ $mIsStaff ? 'agent' : 'requester' }} {{ $mIsMe ? 'me' : '' }}">
+                  <article class="msg {{ $mIsStaff ? 'agent' : 'requester' }} {{ $mIsMe ? '' : 'them' }}">
                     <div class="msg-aside">
                       <div class="avatar {{ $mIsStaff ? 'agent' : 'soft' }}">{{ $mInitials }}</div>
                     </div>
@@ -347,7 +387,7 @@
                   <div class="right">
                     @if ($is_staff)
                       <div class="select-pill size-s">
-                        <select name="status" form="statusForm" aria-label="Update ticket status">
+                        <select id="statusSelect" name="_status" form="statusForm" aria-label="Update ticket status">
                           <option value="">Ticket Status</option>
                           <option value="open">Open</option>
                           <option value="in_progress">Set In Progress</option>
@@ -367,6 +407,7 @@
               <form id="statusForm" method="POST" action="{{ route('tickets.updateStatus', $ticket->ticket_id) }}" style="display:none;">
                 @csrf
                 @method('PATCH')
+                <input type="hidden" name="status" id="statusHidden" value="">
               </form>
             @endif
           </div>
@@ -402,7 +443,11 @@
                   </dd>
                 </div>
                 <div class="row"><dt>Category</dt><dd>{{ $ticket->category }}</dd></div>
-                <div class="row"><dt>Contact</dt><dd>{{ $ticket->preferred_contact }}</dd></div>
+                @php
+                  $contact = (string) ($ticket->preferred_contact ?? '');
+                  $contact = $contact !== '' ? ucfirst(strtolower($contact)) : '';
+                @endphp
+                <div class="row"><dt>Contact</dt><dd>{{ $contact }}</dd></div>
               </dl>
             </div>
           </section>

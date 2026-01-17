@@ -8,6 +8,9 @@
   const fileInput = document.getElementById('fileInput');
   const fileList = document.getElementById('fileList');
 
+  const canUseDataTransfer = typeof DataTransfer !== 'undefined';
+  let dt = canUseDataTransfer ? new DataTransfer() : null;
+
   const MAX = 1000;
 
   function formatSize(bytes) {
@@ -23,29 +26,108 @@
     counter.textContent = `${len} / ${MAX}`;
   }
 
-  function renderFiles(files) {
+  function syncAndRender(files) {
     if (!fileList) return;
     fileList.innerHTML = '';
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((f) => {
+    const arr = Array.from(files);
+
+    arr.forEach((f, idx) => {
       const li = document.createElement('li');
-      li.textContent = `${f.name} (${formatSize(f.size)})`;
+
+      const icon = document.createElement('i');
+      icon.className = 'bx bx-file';
+      icon.setAttribute('aria-hidden', 'true');
+
+      const meta = document.createElement('div');
+      meta.className = 'file-meta';
+
+      const name = document.createElement('div');
+      name.className = 'file-name';
+      name.textContent = f.name;
+
+      const size = document.createElement('div');
+      size.className = 'file-size';
+      size.textContent = formatSize(f.size);
+
+      meta.appendChild(name);
+      meta.appendChild(size);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'file-remove';
+      removeBtn.setAttribute('aria-label', `Remove ${f.name}`);
+      removeBtn.innerHTML = "<i class='bx bx-x'></i>";
+      removeBtn.addEventListener('click', () => {
+        if (!fileInput) return;
+
+        if (!canUseDataTransfer) {
+          fileInput.value = '';
+          syncAndRender([]);
+          return;
+        }
+
+        const next = new DataTransfer();
+        arr.forEach((file, i) => {
+          if (i !== idx) next.items.add(file);
+        });
+
+        dt = next;
+        try {
+          fileInput.files = dt.files;
+        } catch (_) {
+          // no-op
+        }
+
+        syncAndRender(dt.files);
+      });
+
+      li.appendChild(icon);
+      li.appendChild(meta);
+      li.appendChild(removeBtn);
       fileList.appendChild(li);
     });
   }
 
-  function setFilesFromDrop(fileListObj) {
+  function mergeFiles(existing, incoming) {
+    const next = new DataTransfer();
+    const seen = new Set();
+
+    const add = (file) => {
+      const key = `${file.name}|${file.size}|${file.lastModified}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      next.items.add(file);
+    };
+
+    Array.from(existing || []).forEach(add);
+    Array.from(incoming || []).forEach(add);
+    return next;
+  }
+
+  function addSelectedFiles(fileListObj) {
     if (!fileInput) return;
 
-    // Chrome allows assignment; if it fails, we still render the list.
+    if (!canUseDataTransfer) {
+      // Browser will replace the selection; we at least render it.
+      syncAndRender(fileListObj);
+      return;
+    }
+
+    dt = mergeFiles(dt?.files, fileListObj);
+
     try {
-      fileInput.files = fileListObj;
+      fileInput.files = dt.files;
     } catch (_) {
       // no-op
     }
 
-    renderFiles(fileListObj);
+    syncAndRender(dt.files);
+  }
+
+  function setFilesFromDrop(fileListObj) {
+    addSelectedFiles(fileListObj);
   }
 
   if (desc) {
@@ -59,7 +141,9 @@
   }
 
   if (fileInput) {
-    fileInput.addEventListener('change', () => renderFiles(fileInput.files));
+    fileInput.addEventListener('change', () => {
+      addSelectedFiles(fileInput.files);
+    });
   }
 
   if (dropzone) {

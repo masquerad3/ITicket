@@ -189,9 +189,10 @@ class TicketController extends Controller
             $messages = collect();
         }
 
+        $files = collect();
         $messageFiles = collect();
         try {
-            $messageFiles = collect(DB::select('EXEC dbo.sp_read_ticket_message_files_by_ticket @ticket_id = ?', [$ticket]))
+            $all = collect(DB::select('EXEC dbo.sp_read_ticket_attachments_by_ticket @ticket_id = ?', [$ticket]))
                 ->map(function ($f) {
                     if (isset($f->created_at) && $f->created_at !== null && $f->created_at !== '') {
                         $parsed = $this->parseDbDatetime($f->created_at);
@@ -203,7 +204,16 @@ class TicketController extends Controller
                     return $f;
                 })
                 ->values();
+
+            $files = $all
+                ->filter(fn ($a) => !isset($a->message_id) || $a->message_id === null)
+                ->values();
+
+            $messageFiles = $all
+                ->filter(fn ($a) => isset($a->message_id) && $a->message_id !== null)
+                ->values();
         } catch (\Throwable) {
+            $files = collect();
             $messageFiles = collect();
         }
 
@@ -227,53 +237,7 @@ class TicketController extends Controller
             $tags = collect();
         }
 
-        $files = collect();
-        try {
-            $files = collect(DB::select('EXEC dbo.sp_read_ticket_files_by_ticket @ticket_id = ?', [$ticket]))
-                ->map(function ($f) {
-                    if (isset($f->created_at) && $f->created_at !== null && $f->created_at !== '') {
-                        $parsed = $this->parseDbDatetime($f->created_at);
-                        if ($parsed !== null) {
-                            $f->created_at = $parsed;
-                        }
-                    }
-                    return $f;
-                })
-                ->values();
-        } catch (\Throwable) {
-            $files = collect();
-        }
-
         $activity = collect();
-        $requesterName = trim(($row->requester_first_name ?? '').' '.($row->requester_last_name ?? ''));
-        if ($requesterName === '') {
-            $requesterName = 'Requester';
-        }
-
-        if (!empty($row->created_at)) {
-            $activity->push([
-                'at' => $row->created_at,
-                'text' => "Ticket created by {$requesterName}",
-            ]);
-        }
-
-        if (!empty($row->assigned_at) && !empty($row->assigned_to)) {
-            $assigneeName = trim(($row->assignee_first_name ?? '').' '.($row->assignee_last_name ?? ''));
-            if ($assigneeName === '') {
-                $assigneeName = 'User #'.$row->assigned_to;
-            }
-            $activity->push([
-                'at' => $row->assigned_at,
-                'text' => "Assigned to {$assigneeName}",
-            ]);
-        }
-
-        if (!empty($row->resolved_at)) {
-            $activity->push([
-                'at' => $row->resolved_at,
-                'text' => 'Marked resolved',
-            ]);
-        }
 
         foreach ($messages as $m) {
             $mName = trim(($m->user_first_name ?? '').' '.($m->user_last_name ?? ''));
@@ -291,7 +255,12 @@ class TicketController extends Controller
                     $text = "Ticket assigned by {$mName}";
                 } elseif (str_starts_with($body, 'STATUS_CHANGED:')) {
                     $st = trim(substr($body, strlen('STATUS_CHANGED:')));
-                    $text = "Status changed to {$st} by {$mName}";
+                    $label = $st;
+                    if ($st === 'in_progress') $label = 'In Progress';
+                    if ($st === 'open') $label = 'Open';
+                    if ($st === 'resolved') $label = 'Resolved';
+                    if ($st === 'closed') $label = 'Closed';
+                    $text = "Status changed to {$label} by {$mName}";
                 } elseif (str_starts_with($body, 'ATTACHMENT_REMOVED:')) {
                     $name = trim(substr($body, strlen('ATTACHMENT_REMOVED:')));
                     $text = "Attachment removed by {$mName} ({$name})";
@@ -352,9 +321,10 @@ class TicketController extends Controller
 
             try {
                 DB::select(
-                    'EXEC dbo.sp_create_ticket_file @ticket_id=?, @uploaded_by=?, @stored_path=?, @original_name=?, @mime=?, @size=?',
+                    'EXEC dbo.sp_create_ticket_attachment @ticket_id=?, @message_id=?, @uploaded_by=?, @stored_path=?, @original_name=?, @mime=?, @size=?',
                     [
                         $ticket,
+                        null,
                         auth()->id(),
                         $storedPath,
                         $file->getClientOriginalName(),
@@ -461,8 +431,9 @@ class TicketController extends Controller
 
                 try {
                     DB::select(
-                        'EXEC dbo.sp_create_ticket_message_file @message_id=?, @uploaded_by=?, @stored_path=?, @original_name=?, @mime=?, @size=?',
+                        'EXEC dbo.sp_create_ticket_attachment @ticket_id=?, @message_id=?, @uploaded_by=?, @stored_path=?, @original_name=?, @mime=?, @size=?',
                         [
+                            $ticket,
                             $messageId,
                             auth()->id(),
                             $storedPath,
@@ -498,13 +469,13 @@ class TicketController extends Controller
 
         $rows = [];
         try {
-            $rows = DB::select('EXEC dbo.sp_read_ticket_message_files_by_ticket @ticket_id = ?', [$ticket]);
+            $rows = DB::select('EXEC dbo.sp_read_ticket_attachments_by_ticket @ticket_id = ?', [$ticket]);
         } catch (\Throwable) {
             abort(404);
         }
 
         $match = collect($rows)->firstWhere('file_id', $file);
-        if (!$match) {
+        if (!$match || !isset($match->message_id) || $match->message_id === null) {
             abort(404);
         }
 
@@ -521,13 +492,13 @@ class TicketController extends Controller
 
         $files = collect();
         try {
-            $files = collect(DB::select('EXEC dbo.sp_read_ticket_files_by_ticket @ticket_id = ?', [$ticket]));
+            $files = collect(DB::select('EXEC dbo.sp_read_ticket_attachments_by_ticket @ticket_id = ?', [$ticket]));
         } catch (\Throwable) {
             abort(404);
         }
 
         $row = $files->firstWhere('file_id', $file);
-        if (!$row) {
+        if (!$row || (isset($row->message_id) && $row->message_id !== null)) {
             abort(404);
         }
 
@@ -564,8 +535,8 @@ class TicketController extends Controller
 
         if (!$allowed) {
             try {
-                $files = collect(DB::select('EXEC dbo.sp_read_ticket_files_by_ticket @ticket_id = ?', [$ticket]));
-                $allowed = $files->contains(fn ($f) => (string) ($f->stored_path ?? '') === $path);
+                $files = collect(DB::select('EXEC dbo.sp_read_ticket_attachments_by_ticket @ticket_id = ?', [$ticket]));
+                $allowed = $files->contains(fn ($f) => (!isset($f->message_id) || $f->message_id === null) && (string) ($f->stored_path ?? '') === $path);
             } catch (\Throwable) {
                 $allowed = false;
             }
@@ -629,7 +600,7 @@ class TicketController extends Controller
             'description' => ['required', 'string', 'max:1000'],
             'contact' => ['required', 'string', 'in:email,phone,teams'],
             'consent' => ['accepted'],
-            'files' => ['nullable', 'array'],
+            'files' => ['nullable', 'array', 'max:10'],
             'files.*' => ['file', 'max:10240', 'mimes:png,jpg,jpeg,pdf,doc,docx,txt'],
         ]);
 
@@ -653,16 +624,25 @@ class TicketController extends Controller
             abort(500, 'Failed to create ticket.');
         }
 
-        $storedPaths = [];
         foreach ($request->file('files', []) as $file) {
-            $storedPaths[] = Storage::disk('public')->putFile("tickets/{$ticketId}", $file);
-        }
+            $storedPath = Storage::disk('public')->putFile("tickets/{$ticketId}", $file);
 
-        if (!empty($storedPaths)) {
-            DB::select(
-                'EXEC dbo.sp_update_ticket_attachments @ticket_id=?, @attachments=?',
-                [$ticketId, json_encode($storedPaths)]
-            );
+            try {
+                DB::select(
+                    'EXEC dbo.sp_create_ticket_attachment @ticket_id=?, @message_id=?, @uploaded_by=?, @stored_path=?, @original_name=?, @mime=?, @size=?',
+                    [
+                        $ticketId,
+                        null,
+                        auth()->id(),
+                        $storedPath,
+                        $file->getClientOriginalName(),
+                        $file->getClientMimeType(),
+                        $file->getSize(),
+                    ]
+                );
+            } catch (\Throwable) {
+                // no-op
+            }
         }
 
         $this->createSystemMessage($ticketId, 'TICKET_CREATED');
@@ -682,18 +662,18 @@ class TicketController extends Controller
 
         $row = null;
         try {
-            $files = collect(DB::select('EXEC dbo.sp_read_ticket_files_by_ticket @ticket_id = ?', [$ticket]));
+            $files = collect(DB::select('EXEC dbo.sp_read_ticket_attachments_by_ticket @ticket_id = ?', [$ticket]));
             $row = $files->firstWhere('file_id', $file);
         } catch (\Throwable) {
             $row = null;
         }
 
-        if (!$row) {
+        if (!$row || (isset($row->message_id) && $row->message_id !== null)) {
             return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment not found.');
         }
 
         try {
-            DB::select('EXEC dbo.sp_delete_ticket_file @ticket_id = ?, @file_id = ?', [$ticket, $file]);
+            DB::select('EXEC dbo.sp_delete_ticket_attachment @ticket_id = ?, @file_id = ?', [$ticket, $file]);
         } catch (\Throwable) {
             // no-op
         }
@@ -718,18 +698,18 @@ class TicketController extends Controller
 
         $match = null;
         try {
-            $rows = collect(DB::select('EXEC dbo.sp_read_ticket_message_files_by_ticket @ticket_id = ?', [$ticket]));
+            $rows = collect(DB::select('EXEC dbo.sp_read_ticket_attachments_by_ticket @ticket_id = ?', [$ticket]));
             $match = $rows->firstWhere('file_id', $file);
         } catch (\Throwable) {
             $match = null;
         }
 
-        if (!$match) {
+        if (!$match || !isset($match->message_id) || $match->message_id === null) {
             return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment not found.');
         }
 
         try {
-            DB::select('EXEC dbo.sp_delete_ticket_message_file @ticket_id = ?, @file_id = ?', [$ticket, $file]);
+            DB::select('EXEC dbo.sp_delete_ticket_attachment @ticket_id = ?, @file_id = ?', [$ticket, $file]);
         } catch (\Throwable) {
             // no-op
         }
