@@ -40,6 +40,8 @@
         $initials = 'U';
     }
 
+    $photoPath = (string) ($u?->profile_photo_path ?? '');
+
     $status_label = 'Active';
     $is_active_value = 1;
     if ($u !== null && $u->is_active !== null) {
@@ -113,10 +115,21 @@
         <!-- Left: Summary card -->
         <aside class="profile-card">
           <div class="profile-avatar">
-            <div class="avatar-lg">{{ $initials }}</div>
-            <button class="btn-outlined small" type="button">
-              <i class='bx bx-upload'></i> Upload Photo
-            </button>
+            <div class="avatar-lg">
+              @if ($photoPath !== '')
+                <img src="{{ asset('storage/' . ltrim($photoPath, '/')) }}" alt="Profile photo">
+              @else
+                {{ $initials }}
+              @endif
+            </div>
+
+            <form id="photoForm" method="POST" action="{{ route('profile.photo.update') }}" enctype="multipart/form-data">
+              @csrf
+              <input id="photoInput" type="file" name="photo" accept="image/*" style="display:none;">
+              <button class="btn-outlined small" id="photoBtn" type="button">
+                <i class='bx bx-upload'></i> Upload Photo
+              </button>
+            </form>
           </div>
 
           <div class="profile-info">
@@ -272,6 +285,19 @@
   </div>
 
   <script src="{{ asset('assets/js/components/sidebar.js') }}"></script>
+  <script>
+    (() => {
+      const btn = document.getElementById('photoBtn');
+      const input = document.getElementById('photoInput');
+      const form = document.getElementById('photoForm');
+      if (!btn || !input || !form) return;
+
+      btn.addEventListener('click', () => input.click());
+      input.addEventListener('change', () => {
+        if (input.files && input.files.length > 0) form.submit();
+      });
+    })();
+  </script>
   <script src="{{ asset('assets/js/pages/profile.js') }}"></script>
 </body>
 </html>

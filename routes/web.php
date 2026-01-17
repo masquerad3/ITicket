@@ -87,8 +87,10 @@ Route::middleware('auth')->group(function () {
         Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.updateStatus');
         Route::post('/tickets/{ticket}/tags', [TicketController::class, 'addTag'])->name('tickets.tags.store');
         Route::delete('/tickets/{ticket}/tags', [TicketController::class, 'removeTag'])->name('tickets.tags.delete');
+    });
 
-        // Knowledge Base management (staff/admin only)
+    Route::middleware('role:admin')->group(function () {
+        // Knowledge Base management (admin only)
         Route::get('/knowledge/manage', [KnowledgeBaseAdminController::class, 'index'])->name('knowledge.manage');
         Route::get('/knowledge/manage/create', [KnowledgeBaseAdminController::class, 'create'])->name('knowledge.manage.create');
         Route::post('/knowledge/manage', [KnowledgeBaseAdminController::class, 'store'])->name('knowledge.manage.store');
@@ -97,6 +99,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/knowledge/manage/{article}/publish', [KnowledgeBaseAdminController::class, 'setPublish'])->whereNumber('article')->name('knowledge.manage.publish');
         Route::patch('/knowledge/manage/{article}/featured', [KnowledgeBaseAdminController::class, 'setFeatured'])->whereNumber('article')->name('knowledge.manage.featured');
         Route::delete('/knowledge/manage/{article}', [KnowledgeBaseAdminController::class, 'destroy'])->whereNumber('article')->name('knowledge.manage.delete');
+
+        // Ticket hard delete (admin only)
+        Route::delete('/tickets/{ticket}/hard-delete', [TicketController::class, 'hardDelete'])->whereNumber('ticket')->name('tickets.hardDelete');
     });
 
     Route::get('/knowledge', [KnowledgeBaseController::class, 'index'])->name('knowledge');
@@ -109,6 +114,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     Route::get('/settings', fn () => view('pages.settings'))->name('settings');

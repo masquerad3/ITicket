@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
@@ -107,5 +109,64 @@ class ProfileController extends Controller
     return redirect()
       ->route('profile')
       ->with('status', 'Password updated successfully.');
+  }
+
+  public function updatePhoto(Request $request)
+  {
+    $user = auth()->user();
+
+    if ($user === null) {
+      abort(403);
+    }
+
+    $request->validate([
+      'photo' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+    ]);
+
+    $file = $request->file('photo');
+    if ($file === null) {
+      return back()->withErrors(['photo' => 'No file uploaded.']);
+    }
+
+    $disk = Storage::disk('public');
+
+    $ext = strtolower((string) $file->getClientOriginalExtension());
+    $ext = $ext !== '' ? $ext : 'jpg';
+    $filename = 'user_' . ((int) $user->user_id) . '_' . now()->format('YmdHis') . '_' . Str::lower(Str::random(6)) . '.' . $ext;
+    $path = $disk->putFileAs('profile_photos', $file, $filename);
+
+    if (!is_string($path) || $path === '') {
+      return back()->withErrors(['photo' => 'Could not store uploaded photo.']);
+    }
+
+    // Best-effort: remove old photo (only within profile_photos/)
+    $oldPath = (string) ($user->profile_photo_path ?? '');
+    if ($oldPath !== '' && str_starts_with($oldPath, 'profile_photos/')) {
+      try {
+        $disk->delete($oldPath);
+      } catch (\Throwable) {
+        // no-op
+      }
+    }
+
+    try {
+      DB::select('EXEC dbo.sp_update_user_photo @user_id = ?, @profile_photo_path = ?', [
+        (int) $user->user_id,
+        $path,
+      ]);
+    } catch (\Throwable) {
+      // If DB update fails, remove the newly uploaded file so we don't orphan it.
+      try {
+        $disk->delete($path);
+      } catch (\Throwable) {
+        // no-op
+      }
+
+      return back()->withErrors(['photo' => 'Could not update profile photo.']);
+    }
+
+    return redirect()
+      ->route('profile')
+      ->with('status', 'Profile photo updated.');
   }
 }

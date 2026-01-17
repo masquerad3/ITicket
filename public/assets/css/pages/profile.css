@@ -99,6 +99,13 @@
   color: #ffffff;
   font-weight: 800;
   font-size: 28px;
+  overflow: hidden;
+}
+.profile-card .profile-avatar .avatar-lg img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
 }
 
 .btn-outlined.small {

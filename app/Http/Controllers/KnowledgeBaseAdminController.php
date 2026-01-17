@@ -8,11 +8,11 @@ use Illuminate\Support\Str;
 
 class KnowledgeBaseAdminController extends Controller
 {
-    private function isStaff(): bool
+    private function isAdmin(): bool
     {
         $role = strtolower((string) (auth()->user()?->role ?? 'user'));
 
-        return in_array($role, ['it', 'admin'], true);
+        return $role === 'admin';
     }
 
     private function sanitizeHtml(string $html): string
@@ -85,7 +85,7 @@ class KnowledgeBaseAdminController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless($this->isStaff(), 403);
+        abort_unless($this->isAdmin(), 403);
 
         $q = trim((string) $request->query('q', ''));
         $categoryId = $request->query('category');
@@ -125,7 +125,7 @@ class KnowledgeBaseAdminController extends Controller
 
     public function create()
     {
-        abort_unless($this->isStaff(), 403);
+        abort_unless($this->isAdmin(), 403);
 
         $categories = collect(DB::select('EXEC dbo.sp_read_kb_categories'));
 
@@ -138,7 +138,7 @@ class KnowledgeBaseAdminController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless($this->isStaff(), 403);
+        abort_unless($this->isAdmin(), 403);
 
         $data = $request->validate([
             'category_id' => ['required', 'integer'],
@@ -175,7 +175,7 @@ class KnowledgeBaseAdminController extends Controller
 
     public function edit(int $articleId)
     {
-        abort_unless($this->isStaff(), 403);
+        abort_unless($this->isAdmin(), 403);
 
         $categories = collect(DB::select('EXEC dbo.sp_read_kb_categories'));
         $rows = DB::select('EXEC dbo.sp_read_kb_article_by_id_admin @article_id = ?', [$articleId]);
@@ -193,7 +193,7 @@ class KnowledgeBaseAdminController extends Controller
 
     public function update(Request $request, int $articleId)
     {
-        abort_unless($this->isStaff(), 403);
+        abort_unless($this->isAdmin(), 403);
 
         $rows = DB::select('EXEC dbo.sp_read_kb_article_by_id_admin @article_id = ?', [$articleId]);
         $existing = $rows[0] ?? null;
@@ -239,7 +239,7 @@ class KnowledgeBaseAdminController extends Controller
 
     public function setPublish(Request $request, int $articleId)
     {
-        abort_unless($this->isStaff(), 403);
+        abort_unless($this->isAdmin(), 403);
 
         $request->validate([
             'is_published' => ['required'],
@@ -255,7 +255,7 @@ class KnowledgeBaseAdminController extends Controller
 
     public function setFeatured(Request $request, int $articleId)
     {
-        abort_unless($this->isStaff(), 403);
+        abort_unless($this->isAdmin(), 403);
 
         $request->validate([
             'is_featured' => ['required'],
@@ -271,7 +271,7 @@ class KnowledgeBaseAdminController extends Controller
 
     public function destroy(int $articleId)
     {
-        abort_unless($this->isStaff(), 403);
+        abort_unless($this->isAdmin(), 403);
 
         DB::select('EXEC dbo.sp_delete_kb_article @article_id=?', [$articleId]);
 

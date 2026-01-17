@@ -47,6 +47,7 @@ class User extends Authenticatable
         'password_hash',
         'role',
         'is_active',
+        'profile_photo_path',
     ];
 
     // Fields hidden when the model is converted to an array/JSON.

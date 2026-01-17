@@ -32,10 +32,18 @@
     if ($initials === '') {
         $initials = 'U';
     }
+
+    $photoPath = (string) ($u?->profile_photo_path ?? '');
   @endphp
 
 <a href="{{ route('profile') }}" class="profile-chip" style="text-decoration:none; color:inherit;">
-  <div class="avatar">{{ $initials }}</div>
+  <div class="avatar">
+    @if ($photoPath !== '')
+      <img src="{{ asset('storage/' . ltrim($photoPath, '/')) }}" alt="Profile photo">
+    @else
+      {{ $initials }}
+    @endif
+  </div>
 
   <div class="user-meta">
     <p class="user-name">{{ $u?->first_name }} {{ $u?->last_name }}</p>

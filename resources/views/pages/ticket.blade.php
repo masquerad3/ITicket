@@ -22,6 +22,7 @@
 
     $role = strtolower((string) ($u?->role ?? 'user'));
     $is_staff = in_array($role, ['admin', 'it'], true);
+    $is_admin = $role === 'admin';
 
     $requesterFirst = $ticket->requester_first_name ?? '';
     $requesterLast = $ticket->requester_last_name ?? '';
@@ -47,6 +48,15 @@
 
     $displayId = '#TKT-' . ($ticket->ticket_id ?? '');
 
+    $myId = auth()->id();
+    $is_my_ticket = $myId !== null && (int) ($ticket->user_id ?? 0) === (int) $myId;
+
+    $requesterPhoto = (string) ($ticket->requester_photo_path ?? '');
+    if ($requesterPhoto === '' && $is_my_ticket && $u !== null) {
+      $requesterPhoto = (string) ($u->profile_photo_path ?? '');
+    }
+    $assigneePhoto = (string) ($ticket->assignee_photo_path ?? '');
+
     $statusLabel = 'Open';
     if (($ticket->status ?? '') === 'in_progress') $statusLabel = 'In Progress';
     if (($ticket->status ?? '') === 'resolved') $statusLabel = 'Resolved';
@@ -54,9 +64,6 @@
 
     $attachments = $ticket->attachments ?? [];
     if (!is_array($attachments)) $attachments = [];
-
-    $myId = auth()->id();
-    $is_my_ticket = $myId !== null && (int) ($ticket->user_id ?? 0) === (int) $myId;
 
     $messages = $messages ?? collect();
     $tags = $tags ?? collect();
@@ -127,6 +134,14 @@
               <button type="submit" class="btn-soft"><i class='bx bx-check-circle'></i> Mark Resolved</button>
             </form>
           @endif
+
+          @if ($is_admin)
+            <form method="POST" action="{{ route('tickets.hardDelete', $ticket->ticket_id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this ticket and all its messages/files? This cannot be undone.');">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn-danger"><i class='bx bx-trash'></i> Hard Delete</button>
+            </form>
+          @endif
         </div>
       </section>
 
@@ -180,7 +195,13 @@
             <!-- Requester message -->
             <article class="msg requester {{ $is_my_ticket ? '' : 'them' }}">
               <div class="msg-aside">
-                <div class="avatar soft">{{ $initials }}</div>
+                <div class="avatar soft">
+                  @if ($requesterPhoto !== '')
+                    <img src="{{ asset('storage/' . ltrim($requesterPhoto, '/')) }}" alt="Requester">
+                  @else
+                    {{ $initials }}
+                  @endif
+                </div>
               </div>
               <div class="msg-body">
                 <div class="msg-top">
@@ -344,7 +365,19 @@
                 @else
                   <article class="msg {{ $mIsStaff ? 'agent' : 'requester' }} {{ $mIsMe ? '' : 'them' }}">
                     <div class="msg-aside">
-                      <div class="avatar {{ $mIsStaff ? 'agent' : 'soft' }}">{{ $mInitials }}</div>
+                      @php
+                        $mPhoto = (string) ($m->user_photo_path ?? '');
+                        if ($mPhoto === '' && $mIsMe && $u !== null) {
+                          $mPhoto = (string) ($u->profile_photo_path ?? '');
+                        }
+                      @endphp
+                      <div class="avatar {{ $mIsStaff ? 'agent' : 'soft' }}">
+                        @if ($mPhoto !== '')
+                          <img src="{{ asset('storage/' . ltrim($mPhoto, '/')) }}" alt="User">
+                        @else
+                          {{ $mInitials }}
+                        @endif
+                      </div>
                     </div>
                     <div class="msg-body">
                       <div class="msg-top">
@@ -503,7 +536,13 @@
             <div class="panel-body people">
               <div class="p-row">
                 <div class="p-who">
-                  <div class="avatar soft">{{ $initials }}</div>
+                  <div class="avatar soft">
+                    @if ($requesterPhoto !== '')
+                      <img src="{{ asset('storage/' . ltrim($requesterPhoto, '/')) }}" alt="Requester">
+                    @else
+                      {{ $initials }}
+                    @endif
+                  </div>
                   <div>
                     <strong>{{ $requesterFirst }} {{ $requesterLast }}</strong>
                     <p class="muted">Requester</p>
@@ -513,7 +552,13 @@
               </div>
               <div class="p-row">
                 <div class="p-who">
-                  <div class="avatar agent">{{ $assigneeInitials }}</div>
+                  <div class="avatar agent">
+                    @if ($assigneePhoto !== '')
+                      <img src="{{ asset('storage/' . ltrim($assigneePhoto, '/')) }}" alt="Assignee">
+                    @else
+                      {{ $assigneeInitials }}
+                    @endif
+                  </div>
                   <div>
                     <strong>
                       @php

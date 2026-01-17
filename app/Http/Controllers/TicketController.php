@@ -833,4 +833,47 @@ class TicketController extends Controller
 
         return redirect()->route('tickets.show', $ticket)->with('status', 'Message deleted.');
     }
+
+    public function hardDelete(int $ticket): RedirectResponse
+    {
+        $role = strtolower((string) (auth()->user()?->role ?? 'user'));
+        abort_unless($role === 'admin', 403);
+
+        $row = $this->getAuthorizedTicketRow($ticket);
+
+        // Remove stored files first (best-effort).
+        try {
+            $rows = collect(DB::select('EXEC dbo.sp_read_ticket_attachments_by_ticket @ticket_id = ?', [$ticket]));
+            $rows->each(function ($f) {
+                $path = (string) ($f->stored_path ?? '');
+                if ($path !== '' && str_starts_with($path, 'tickets/') && Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+            });
+        } catch (\Throwable) {
+            // no-op
+        }
+
+        // Legacy JSON attachments (if any)
+        try {
+            $raw = (string) ($row->attachments ?? '');
+            $decoded = $raw !== '' ? json_decode($raw, true) : null;
+            if (is_array($decoded)) {
+                foreach ($decoded as $p) {
+                    $p = (string) $p;
+                    if ($p !== '' && str_starts_with($p, 'tickets/') && Storage::disk('public')->exists($p)) {
+                        Storage::disk('public')->delete($p);
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            // no-op
+        }
+
+        DB::statement('EXEC dbo.sp_hard_delete_ticket @ticket_id = ?', [$ticket]);
+
+        return redirect()
+            ->route('tickets.index')
+            ->with('status', 'Ticket permanently deleted.');
+    }
 }

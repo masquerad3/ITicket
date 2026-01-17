@@ -52,7 +52,7 @@
           </div>
           @php
             $role = strtolower((string) (auth()->user()?->role ?? 'user'));
-            $is_staff = in_array($role, ['admin', 'it'], true);
+            $is_admin = $role === 'admin';
           @endphp
 
           <div class="hero-actions">
@@ -60,7 +60,7 @@
               <i class='bx bx-plus'></i> Create Ticket
             </a>
 
-            @if ($is_staff)
+            @if ($is_admin)
               <a class="hero-cta hero-cta-secondary" href="{{ route('knowledge.manage') }}">
                 <i class='bx bx-edit'></i> Manage Articles
               </a>
