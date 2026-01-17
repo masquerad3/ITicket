@@ -53,6 +53,13 @@
   gap: 12px;
   align-items: center;
 }
+
+.kb-hero .hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 .kb-hero .hero-text h2 {
   margin: 0;
   font-weight: 800;
@@ -75,6 +82,16 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.kb-hero .hero-cta-secondary {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  box-shadow: none;
+}
+.kb-hero .hero-cta-secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .kb-search {
@@ -125,30 +142,6 @@
   background: #f2f0ff;
   color: #6D65C7;
 }
-
-/* Tags row (neutral pills) */
-.tags-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.tags-label {
-  color: #6b7280;
-  font-size: .9rem;
-}
-.tag {
-  display: inline-flex;
-  align-items: center;
-  background: #f5f2ff;
-  color: #6D65C7;
-  border: 1px solid #e3defa;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-}
-.tag:hover { filter: brightness(1.03) }
 
 /* Categories (left accent using real border, no floating) */
 .categories {

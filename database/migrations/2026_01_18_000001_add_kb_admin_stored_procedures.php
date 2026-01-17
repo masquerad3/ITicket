@@ -25,14 +25,6 @@ return new class extends Migration
         }
 
         $files = [
-            'sp_create_kb_category.sql',
-            'sp_read_kb_categories.sql',
-            'sp_create_kb_article.sql',
-            'sp_update_kb_article.sql',
-            'sp_delete_kb_article.sql',
-            'sp_read_kb_articles.sql',
-            'sp_read_kb_article_by_slug.sql',
-            'sp_increment_kb_article_view.sql',
             'sp_read_kb_articles_admin.sql',
             'sp_read_kb_article_by_id_admin.sql',
             'sp_read_kb_article_by_slug_admin.sql',
@@ -57,14 +49,6 @@ return new class extends Migration
             'sp_read_kb_article_by_slug_admin',
             'sp_read_kb_article_by_id_admin',
             'sp_read_kb_articles_admin',
-            'sp_increment_kb_article_view',
-            'sp_read_kb_article_by_slug',
-            'sp_read_kb_articles',
-            'sp_delete_kb_article',
-            'sp_update_kb_article',
-            'sp_create_kb_article',
-            'sp_read_kb_categories',
-            'sp_create_kb_category',
         ];
 
         foreach ($drops as $proc) {

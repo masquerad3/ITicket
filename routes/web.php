@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KnowledgeBaseController;
+use App\Http\Controllers\KnowledgeBaseAdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route; // Route lets us define website URLs like /login, /register, etc.
@@ -86,6 +87,16 @@ Route::middleware('auth')->group(function () {
         Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.updateStatus');
         Route::post('/tickets/{ticket}/tags', [TicketController::class, 'addTag'])->name('tickets.tags.store');
         Route::delete('/tickets/{ticket}/tags', [TicketController::class, 'removeTag'])->name('tickets.tags.delete');
+
+        // Knowledge Base management (staff/admin only)
+        Route::get('/knowledge/manage', [KnowledgeBaseAdminController::class, 'index'])->name('knowledge.manage');
+        Route::get('/knowledge/manage/create', [KnowledgeBaseAdminController::class, 'create'])->name('knowledge.manage.create');
+        Route::post('/knowledge/manage', [KnowledgeBaseAdminController::class, 'store'])->name('knowledge.manage.store');
+        Route::get('/knowledge/manage/{article}/edit', [KnowledgeBaseAdminController::class, 'edit'])->whereNumber('article')->name('knowledge.manage.edit');
+        Route::patch('/knowledge/manage/{article}', [KnowledgeBaseAdminController::class, 'update'])->whereNumber('article')->name('knowledge.manage.update');
+        Route::patch('/knowledge/manage/{article}/publish', [KnowledgeBaseAdminController::class, 'setPublish'])->whereNumber('article')->name('knowledge.manage.publish');
+        Route::patch('/knowledge/manage/{article}/featured', [KnowledgeBaseAdminController::class, 'setFeatured'])->whereNumber('article')->name('knowledge.manage.featured');
+        Route::delete('/knowledge/manage/{article}', [KnowledgeBaseAdminController::class, 'destroy'])->whereNumber('article')->name('knowledge.manage.delete');
     });
 
     Route::get('/knowledge', [KnowledgeBaseController::class, 'index'])->name('knowledge');

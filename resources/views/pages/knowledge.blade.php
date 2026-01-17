@@ -50,9 +50,22 @@
             <h2>Knowledge Base</h2>
             <p class="muted-light">Search guides and troubleshooting articles.</p>
           </div>
-          <a class="hero-cta" href="{{ route('tickets.create') }}">
-            <i class='bx bx-plus'></i> Create Ticket
-          </a>
+          @php
+            $role = strtolower((string) (auth()->user()?->role ?? 'user'));
+            $is_staff = in_array($role, ['admin', 'it'], true);
+          @endphp
+
+          <div class="hero-actions">
+            <a class="hero-cta" href="{{ route('tickets.create') }}">
+              <i class='bx bx-plus'></i> Create Ticket
+            </a>
+
+            @if ($is_staff)
+              <a class="hero-cta hero-cta-secondary" href="{{ route('knowledge.manage') }}">
+                <i class='bx bx-edit'></i> Manage Articles
+              </a>
+            @endif
+          </div>
 
           <form method="GET" action="{{ route('knowledge') }}" class="searchbar kb-search">
             <i class='bx bx-search'></i>
@@ -68,14 +81,6 @@
             <button type="button" class="btn-clear" title="Clear"><i class='bx bx-x'></i></button>
           </form>
         </div>
-      </section>
-
-      <!-- Popular tags (neutral style) -->
-      <section class="tags-row">
-        <span class="tags-label">Popular:</span>
-        @foreach (collect($categories ?? [])->take(6) as $cat)
-          <a class="tag" href="{{ route('knowledge', ['category' => $cat->category_id]) }}">{{ $cat->name }}</a>
-        @endforeach
       </section>
 
       <!-- Categories with LEFT accent bar -->
