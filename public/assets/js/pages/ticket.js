@@ -80,3 +80,42 @@
     setActive(tabs[0]);
   }
 })();
+
+// Ticket page: dismissible alerts + message action menus
+(function () {
+  document.addEventListener('click', (e) => {
+    const dismissBtn = e.target && e.target.closest ? e.target.closest('[data-dismiss="alert"]') : null;
+    if (dismissBtn) {
+      const alert = dismissBtn.closest('.alert');
+      if (alert) alert.remove();
+      return;
+    }
+
+    const menuBtn = e.target && e.target.closest ? e.target.closest('.msg-menu-btn') : null;
+
+    // Close menus when clicking outside
+    if (!menuBtn) {
+      document.querySelectorAll('.msg-menu.open').forEach((m) => m.classList.remove('open'));
+      document.querySelectorAll('.msg-menu-btn[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+      return;
+    }
+
+    const actions = menuBtn.closest('.msg-actions');
+    const menu = actions ? actions.querySelector('.msg-menu') : null;
+    if (!menu) return;
+
+    // Toggle this menu, close others.
+    const willOpen = !menu.classList.contains('open');
+    document.querySelectorAll('.msg-menu.open').forEach((m) => m.classList.remove('open'));
+    document.querySelectorAll('.msg-menu-btn[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+
+    menu.classList.toggle('open', willOpen);
+    menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.msg-menu.open').forEach((m) => m.classList.remove('open'));
+    document.querySelectorAll('.msg-menu-btn[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+  });
+})();

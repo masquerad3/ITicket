@@ -134,6 +134,7 @@
         <div class="alert alert-success" role="status">
           <i class='bx bx-check-circle'></i>
           <span>{{ session('status') }}</span>
+          <button type="button" class="alert-close" aria-label="Dismiss" data-dismiss="alert"><i class='bx bx-x'></i></button>
         </div>
       @endif
 
@@ -195,10 +196,18 @@
                         $mime = (string) ($f->mime ?? '');
                         $isImg = str_starts_with($mime, 'image/');
                         $name = $f->original_name ?? basename((string) ($f->stored_path ?? ''));
+                        $canDeleteInitial = $is_staff || ((int) ($f->uploaded_by ?? 0) === (int) ($myId ?? 0));
                       @endphp
                       <li>
                         <i class='bx bx-file'></i>
                         <a href="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener">{{ $name }}</a>
+                        @if ($canDeleteInitial)
+                          <form method="POST" action="{{ route('tickets.files.delete', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="icon-btn" title="Remove attachment"><i class='bx bx-trash'></i></button>
+                          </form>
+                        @endif
                       </li>
                       @if ($isImg)
                         <li class="attachment-preview">
@@ -217,10 +226,19 @@
                     @foreach ($attachments as $path)
                       @php
                         $isImg = preg_match('/\.(png|jpe?g|gif|webp)$/i', (string) $path) === 1;
+                        $canDeleteLegacyInitial = $is_staff || $is_my_ticket;
                       @endphp
                       <li>
                         <i class='bx bx-file'></i>
                         <a href="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" target="_blank" rel="noopener">{{ basename($path) }}</a>
+                        @if ($canDeleteLegacyInitial)
+                          <form method="POST" action="{{ route('tickets.attachments.delete', $ticket->ticket_id) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
+                            @csrf
+                            @method('DELETE')
+                            <input type="hidden" name="path" value="{{ $path }}">
+                            <button type="submit" class="icon-btn" title="Remove attachment"><i class='bx bx-trash'></i></button>
+                          </form>
+                        @endif
                       </li>
                       @if ($isImg)
                         <li class="attachment-preview">
@@ -287,6 +305,10 @@
                     } elseif (str_starts_with($body, 'ATTACHMENT_REMOVED:')) {
                       $name = trim(substr($body, strlen('ATTACHMENT_REMOVED:')));
                       $sysText = "Attachment removed: {$name}";
+                    } elseif ($body === 'MESSAGE_DELETED') {
+                      $sysText = $is_staff ? "Message deleted by {$who}" : 'Message deleted';
+                    } elseif ($body === 'NOTE_DELETED') {
+                      $sysText = $is_staff ? "Internal note deleted by {$who}" : 'Message deleted';
                     }
                   @endphp
                   <div class="sys-msg">
@@ -303,6 +325,18 @@
                       <div class="note-top">
                         <strong>Internal note</strong>
                         <span class="muted">{{ optional($m->created_at)->diffForHumans() }} by {{ trim(($mFirst ?? '').' '.($mLast ?? '')) }}</span>
+                        @if ($is_staff)
+                          <div class="msg-actions">
+                            <button type="button" class="icon-btn msg-menu-btn" aria-label="Note actions" aria-expanded="false"><i class='bx bx-dots-vertical-rounded'></i></button>
+                            <div class="msg-menu" role="menu">
+                              <form method="POST" action="{{ route('tickets.messages.delete', ['ticket' => $ticket->ticket_id, 'message' => $m->message_id]) }}" class="menu-form" onsubmit="return confirm('Delete this note?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="menu-item" role="menuitem">Delete note</button>
+                              </form>
+                            </div>
+                          </div>
+                        @endif
                       </div>
                       <p>{{ $m->body }}</p>
                     </div>
@@ -316,6 +350,18 @@
                       <div class="msg-top">
                         <strong>{{ trim(($mFirst ?? '').' '.($mLast ?? '')) }}</strong>
                         <span class="muted">{{ $mIsStaff ? 'IT Support' : 'Requester' }} • {{ optional($m->created_at)->diffForHumans() }}</span>
+                        @if (($mType ?? '') !== 'system' && ($is_staff || ($mIsMe && ($mType ?? '') !== 'internal')))
+                          <div class="msg-actions">
+                            <button type="button" class="icon-btn msg-menu-btn" aria-label="Message actions" aria-expanded="false"><i class='bx bx-dots-vertical-rounded'></i></button>
+                            <div class="msg-menu" role="menu">
+                              <form method="POST" action="{{ route('tickets.messages.delete', ['ticket' => $ticket->ticket_id, 'message' => $m->message_id]) }}" class="menu-form" onsubmit="return confirm('Delete this message?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="menu-item" role="menuitem">Delete message</button>
+                              </form>
+                            </div>
+                          </div>
+                        @endif
                       </div>
                       <p>{{ $m->body }}</p>
 
@@ -335,7 +381,7 @@
                             <li>
                               <i class='bx bx-file'></i>
                               <a href="{{ route('tickets.messageFiles.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener">{{ $name }}</a>
-                              @if ($is_staff)
+                              @if ($is_staff || $mIsMe)
                                 <form method="POST" action="{{ route('tickets.messageFiles.delete', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
                                   @csrf
                                   @method('DELETE')
@@ -517,31 +563,82 @@
           <section class="panel info">
             <div class="panel-head"><h3>Attachments</h3></div>
             <div class="panel-body files">
-              @if ($files->count() > 0)
-                @foreach ($files as $f)
-                  @php
-                    $uploaderName = trim(($f->uploader_first_name ?? '').' '.($f->uploader_last_name ?? ''));
-                    if ($uploaderName === '') $uploaderName = 'User #'.($f->uploaded_by ?? '');
-                    $fname = $f->original_name ?? basename((string) ($f->stored_path ?? ''));
-                  @endphp
-                  <div class="file-row">
-                    <div class="file-row-head">
-                      <a class="file" href="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ $fname }}</a>
-                      @if ($is_staff)
-                        <form method="POST" action="{{ route('tickets.files.delete', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
-                          @csrf
-                          @method('DELETE')
-                          <button type="submit" class="icon-btn" title="Remove attachment"><i class='bx bx-trash'></i></button>
-                        </form>
-                      @endif
+              @php
+                $messageAttachmentCount = 0;
+                foreach ($messages as $_m) {
+                  $mf = $_m->files ?? collect();
+                  if (!($mf instanceof \Illuminate\Support\Collection)) $mf = collect($mf);
+                  $messageAttachmentCount += $mf->count();
+                }
+
+                $hasTicketFiles = $files->count() > 0;
+                $hasMessageFiles = $messageAttachmentCount > 0;
+                $hasLegacyInitial = count($attachments) > 0;
+              @endphp
+
+              @if ($hasTicketFiles || $hasMessageFiles)
+                @if ($hasTicketFiles)
+                  @foreach ($files as $f)
+                    @php
+                      $uploaderName = trim(($f->uploader_first_name ?? '').' '.($f->uploader_last_name ?? ''));
+                      if ($uploaderName === '') $uploaderName = 'User #'.($f->uploaded_by ?? '');
+                      $fname = $f->original_name ?? basename((string) ($f->stored_path ?? ''));
+                      $canDelete = $is_staff || ((int) ($f->uploaded_by ?? 0) === (int) ($myId ?? 0));
+                    @endphp
+                    <div class="file-row">
+                      <div class="file-row-head">
+                        <a class="file" href="{{ route('tickets.files.show', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ $fname }}</a>
+                        @if ($canDelete)
+                          <form method="POST" action="{{ route('tickets.files.delete', ['ticket' => $ticket->ticket_id, 'file' => $f->file_id]) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="icon-btn" title="Remove attachment"><i class='bx bx-trash'></i></button>
+                          </form>
+                        @endif
+                      </div>
+                      <div class="file-meta muted">Uploaded {{ optional($f->created_at ?? null)->diffForHumans() }} by {{ $uploaderName }}</div>
                     </div>
-                    <div class="file-meta muted">Uploaded {{ optional($f->created_at ?? null)->diffForHumans() }} by {{ $uploaderName }}</div>
+                  @endforeach
+                @endif
+
+                @if ($hasMessageFiles)
+                  <div class="file-section">
+                    <div class="file-section-title muted">Message attachments</div>
+                    @foreach ($messages as $_m)
+                      @php
+                        $_files = $_m->files ?? collect();
+                        if (!($_files instanceof \Illuminate\Support\Collection)) $_files = collect($_files);
+                      @endphp
+                      @foreach ($_files as $_f)
+                        @php
+                          $_uploaderName = trim(($_f->uploader_first_name ?? '').' '.($_f->uploader_last_name ?? ''));
+                          if ($_uploaderName === '') $_uploaderName = 'User #'.($_f->uploaded_by ?? '');
+                          $_fname = $_f->original_name ?? basename((string) ($_f->stored_path ?? ''));
+                          $_canDelete = $is_staff || ((int) ($_f->uploaded_by ?? 0) === (int) ($myId ?? 0));
+                        @endphp
+                        <div class="file-row">
+                          <div class="file-row-head">
+                            <a class="file" href="{{ route('tickets.messageFiles.show', ['ticket' => $ticket->ticket_id, 'file' => $_f->file_id]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ $_fname }}</a>
+                            @if ($_canDelete)
+                              <form method="POST" action="{{ route('tickets.messageFiles.delete', ['ticket' => $ticket->ticket_id, 'file' => $_f->file_id]) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="icon-btn" title="Remove attachment"><i class='bx bx-trash'></i></button>
+                              </form>
+                            @endif
+                          </div>
+                          <div class="file-meta muted">Uploaded {{ optional($_f->created_at ?? null)->diffForHumans() }} by {{ $_uploaderName }}</div>
+                        </div>
+                      @endforeach
+                    @endforeach
                   </div>
-                @endforeach
-              @elseif (count($attachments) > 0)
-                <p class="muted">Only initial attachments are available below.</p>
+                @endif
               @else
-                <p class="muted">No files attached.</p>
+                @if ($hasLegacyInitial)
+                  <p class="muted">Only initial attachments are available below.</p>
+                @else
+                  <p class="muted">No files attached.</p>
+                @endif
               @endif
 
               @if (count($attachments) > 0)
@@ -550,7 +647,7 @@
                   @foreach ($attachments as $path)
                     <div class="file-row-head">
                       <a class="file" href="{{ route('tickets.attachments.view', ['ticket' => $ticket->ticket_id, 'path' => $path]) }}" target="_blank" rel="noopener"><i class='bx bx-file'></i> {{ basename($path) }}</a>
-                      @if ($is_staff)
+                      @if ($is_staff || $is_my_ticket)
                         <form method="POST" action="{{ route('tickets.attachments.delete', $ticket->ticket_id) }}" class="inline-form" onsubmit="return confirm('Remove this attachment?');">
                           @csrf
                           @method('DELETE')

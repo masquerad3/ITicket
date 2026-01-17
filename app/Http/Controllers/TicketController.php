@@ -238,6 +238,7 @@ class TicketController extends Controller
         }
 
         $activity = collect();
+        $viewerIsStaff = $this->isStaff();
 
         foreach ($messages as $m) {
             $mName = trim(($m->user_first_name ?? '').' '.($m->user_last_name ?? ''));
@@ -270,6 +271,10 @@ class TicketController extends Controller
                 } elseif (str_starts_with($body, 'TAG_REMOVED:')) {
                     $tag = trim(substr($body, strlen('TAG_REMOVED:')));
                     $text = "Tag \"{$tag}\" removed by {$mName}";
+                } elseif ($body === 'MESSAGE_DELETED') {
+                    $text = $viewerIsStaff ? "Message deleted by {$mName}" : 'Message deleted';
+                } elseif ($body === 'NOTE_DELETED') {
+                    $text = $viewerIsStaff ? "Internal note deleted by {$mName}" : 'Message deleted';
                 }
 
                 $activity->push([
@@ -654,11 +659,8 @@ class TicketController extends Controller
 
     public function deleteFile(int $ticket, int $file): RedirectResponse
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         $this->getAuthorizedTicketRow($ticket);
+        $myId = (int) auth()->id();
 
         $row = null;
         try {
@@ -672,8 +674,13 @@ class TicketController extends Controller
             return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment not found.');
         }
 
+        $uploadedBy = (int) ($row->uploaded_by ?? 0);
+        if (!$this->isStaff() && $uploadedBy !== $myId) {
+            abort(403);
+        }
+
         try {
-            DB::select('EXEC dbo.sp_delete_ticket_attachment @ticket_id = ?, @file_id = ?', [$ticket, $file]);
+            DB::statement('EXEC dbo.sp_delete_ticket_attachment @ticket_id = ?, @file_id = ?', [$ticket, $file]);
         } catch (\Throwable) {
             // no-op
         }
@@ -690,11 +697,8 @@ class TicketController extends Controller
 
     public function deleteMessageFile(int $ticket, int $file): RedirectResponse
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         $this->getAuthorizedTicketRow($ticket);
+        $myId = (int) auth()->id();
 
         $match = null;
         try {
@@ -708,8 +712,13 @@ class TicketController extends Controller
             return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment not found.');
         }
 
+        $uploadedBy = (int) ($match->uploaded_by ?? 0);
+        if (!$this->isStaff() && $uploadedBy !== $myId) {
+            abort(403);
+        }
+
         try {
-            DB::select('EXEC dbo.sp_delete_ticket_attachment @ticket_id = ?, @file_id = ?', [$ticket, $file]);
+            DB::statement('EXEC dbo.sp_delete_ticket_attachment @ticket_id = ?, @file_id = ?', [$ticket, $file]);
         } catch (\Throwable) {
             // no-op
         }
@@ -726,11 +735,11 @@ class TicketController extends Controller
 
     public function deleteLegacyAttachment(Request $request, int $ticket): RedirectResponse
     {
-        if (!$this->isStaff()) {
+        $row = $this->getAuthorizedTicketRow($ticket);
+
+        if (!$this->isStaff() && (int) ($row->user_id ?? 0) !== (int) auth()->id()) {
             abort(403);
         }
-
-        $row = $this->getAuthorizedTicketRow($ticket);
 
         $validated = $request->validate([
             'path' => ['required', 'string'],
@@ -759,7 +768,7 @@ class TicketController extends Controller
         $attachments = array_values(array_filter($attachments, fn ($p) => (string) $p !== $path));
 
         try {
-            DB::select(
+            DB::statement(
                 'EXEC dbo.sp_update_ticket_attachments @ticket_id=?, @attachments=?',
                 [$ticket, json_encode($attachments)]
             );
@@ -774,5 +783,54 @@ class TicketController extends Controller
         $this->createSystemMessage($ticket, 'ATTACHMENT_REMOVED:'.basename($path));
 
         return redirect()->route('tickets.show', $ticket)->with('status', 'Attachment removed.');
+    }
+
+    public function deleteMessage(int $ticket, int $message): RedirectResponse
+    {
+        $this->getAuthorizedTicketRow($ticket);
+
+        $myId = (int) auth()->id();
+        $rows = DB::select('EXEC dbo.sp_read_ticket_message_by_id @ticket_id = ?, @message_id = ?', [$ticket, $message]);
+        $msg = $rows[0] ?? null;
+
+        if (!$msg) {
+            abort(404);
+        }
+
+        if (((string) ($msg->message_type ?? 'public')) === 'system') {
+            abort(403);
+        }
+
+        $ownerId = (int) ($msg->user_id ?? 0);
+        if (!$this->isStaff() && $ownerId !== $myId) {
+            abort(403);
+        }
+
+        if (!$this->isStaff() && ((string) ($msg->message_type ?? 'public')) === 'internal') {
+            abort(403);
+        }
+
+        // Delete any attachments associated with this message.
+        try {
+            $rows = collect(DB::select('EXEC dbo.sp_read_ticket_attachments_by_ticket @ticket_id = ?', [$ticket]));
+            $rows
+                ->filter(fn ($f) => isset($f->message_id) && (int) $f->message_id === (int) $message)
+                ->each(function ($f) use ($ticket) {
+                    $path = (string) ($f->stored_path ?? '');
+                    if ($path !== '' && Storage::disk('public')->exists($path)) {
+                        Storage::disk('public')->delete($path);
+                    }
+                    DB::statement('EXEC dbo.sp_delete_ticket_attachment @ticket_id = ?, @file_id = ?', [$ticket, (int) ($f->file_id ?? 0)]);
+                });
+        } catch (\Throwable) {
+            // no-op
+        }
+
+        DB::statement('EXEC dbo.sp_delete_ticket_message @ticket_id = ?, @message_id = ?', [$ticket, $message]);
+
+        $deletedType = (string) ($msg->message_type ?? 'public');
+        $this->createSystemMessage($ticket, $deletedType === 'internal' ? 'NOTE_DELETED' : 'MESSAGE_DELETED');
+
+        return redirect()->route('tickets.show', $ticket)->with('status', 'Message deleted.');
     }
 }

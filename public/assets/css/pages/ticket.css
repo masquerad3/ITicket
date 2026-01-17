@@ -172,6 +172,24 @@
   font-size: 18px;
 }
 
+.alert-close {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(6, 95, 70, .18);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.alert-close:hover {
+  background: rgba(6, 95, 70, .06);
+}
+
 /* Panels */
 .panel {
   background: #ffffff;
@@ -332,6 +350,54 @@
   align-items: baseline;
   margin-bottom: 4px;
   font-size: 13px;
+}
+
+.msg-actions {
+  margin-left: auto;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.msg-menu-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.msg-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 26px rgba(17, 24, 39, .16);
+  padding: 6px;
+  display: none;
+  z-index: 50;
+}
+
+.msg-menu.open {
+  display: block;
+}
+
+.menu-form { margin: 0; }
+
+.menu-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: 10px;
+  color: #111827;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: #f5f2ff;
 }
 
 .msg-top strong {
@@ -563,7 +629,9 @@
 
 .file-row { display: grid; gap: 4px }
 .file-meta { font-size: 12px }
-.file-section { display: grid; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eeeeee }
+.file-section { display: grid; gap: 8px }
+.file-section + .file-section { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eeeeee }
+.file-row + .file-section { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eeeeee }
 .file-section-title { font-weight: 700 }
 
 .activity {
