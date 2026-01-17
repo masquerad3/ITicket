@@ -213,6 +213,25 @@
 .panel-body { padding: 12px }
 .panel-foot { border-top: 1px solid #f1f5f9 }
 
+/* Scroll regions */
+.thread-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.thread-panel .panel-body.thread {
+  overflow: auto;
+  padding-right: 6px;
+  max-height: min(640px, calc(100vh - 340px));
+}
+
+.right-col .panel-body.files {
+  overflow: auto;
+  padding-right: 6px;
+  max-height: min(520px, calc(100vh - 260px));
+}
+
 /* Grid: wider conversation, fixed right column */
 .ticket-grid {
   display: grid;
