@@ -119,22 +119,41 @@
 
       <!-- Ticket Counters -->
       <section class="counter">
-        <div class="counter-card counter-total">
-          <div class="counter-value">{{ (int) ($counts['total'] ?? 0) }}</div>
-          <div class="counter-label">{{ $isStaff ? 'All Tickets' : 'Total Tickets' }}</div>
-        </div>
-        <div class="counter-card counter-open">
-          <div class="counter-value">{{ (int) ($counts['open'] ?? 0) }}</div>
-          <div class="counter-label">Open Tickets</div>
-        </div>
-        <div class="counter-card counter-progress">
-          <div class="counter-value">{{ (int) ($counts['progress'] ?? 0) }}</div>
-          <div class="counter-label">In Progress</div>
-        </div>
-        <div class="counter-card counter-resolved">
-          <div class="counter-value">{{ (int) ($counts['resolved'] ?? 0) }}</div>
-          <div class="counter-label">Resolved</div>
-        </div>
+        @if ($isStaff)
+          <div class="counter-card counter-unassigned">
+            <div class="counter-value">{{ (int) $unassignedTickets->count() }}</div>
+            <div class="counter-label">Unassigned</div>
+          </div>
+          <div class="counter-card counter-mine">
+            <div class="counter-value">{{ (int) $assignedToMeTickets->count() }}</div>
+            <div class="counter-label">Assigned to Me</div>
+          </div>
+          <div class="counter-card counter-open">
+            <div class="counter-value">{{ (int) ($counts['open'] ?? 0) }}</div>
+            <div class="counter-label">Open</div>
+          </div>
+          <div class="counter-card counter-resolved">
+            <div class="counter-value">{{ (int) ($counts['resolved'] ?? 0) }}</div>
+            <div class="counter-label">Resolved</div>
+          </div>
+        @else
+          <div class="counter-card counter-total">
+            <div class="counter-value">{{ (int) ($counts['total'] ?? 0) }}</div>
+            <div class="counter-label">Total Tickets</div>
+          </div>
+          <div class="counter-card counter-open">
+            <div class="counter-value">{{ (int) ($counts['open'] ?? 0) }}</div>
+            <div class="counter-label">Open Tickets</div>
+          </div>
+          <div class="counter-card counter-progress">
+            <div class="counter-value">{{ (int) ($counts['progress'] ?? 0) }}</div>
+            <div class="counter-label">In Progress</div>
+          </div>
+          <div class="counter-card counter-resolved">
+            <div class="counter-value">{{ (int) ($counts['resolved'] ?? 0) }}</div>
+            <div class="counter-label">Resolved</div>
+          </div>
+        @endif
       </section>
 
       <div class="dashboard-grid">
@@ -156,7 +175,7 @@
                 @if ($unassignedTickets->count() === 0)
                   <p class="muted">No unassigned tickets right now.</p>
                 @else
-                  @foreach ($unassignedTickets->take(3) as $t)
+                  @foreach ($unassignedTickets->take(2) as $t)
                     @php
                       $desc = (string) ($t->description ?? '');
                       if (strlen($desc) > 120) $desc = substr($desc, 0, 117).'...';
@@ -197,7 +216,7 @@
                 @if ($assignedToMeTickets->count() === 0)
                   <p class="muted">Nothing assigned to you yet.</p>
                 @else
-                  @foreach ($assignedToMeTickets->take(3) as $t)
+                  @foreach ($assignedToMeTickets->take(2) as $t)
                     @php
                       $desc = (string) ($t->description ?? '');
                       if (strlen($desc) > 120) $desc = substr($desc, 0, 117).'...';

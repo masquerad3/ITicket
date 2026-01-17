@@ -70,6 +70,8 @@
 .counter .counter-card.counter-open     { border-left-color:#ff9b73; }
 .counter .counter-card.counter-progress { border-left-color:#ffd357; }
 .counter .counter-card.counter-resolved { border-left-color:#47d18f; }
+.counter .counter-card.counter-unassigned { border-left-color:#a78bfa; }
+.counter .counter-card.counter-mine { border-left-color:#60a5fa; }
 
 
 /* My Tickets Panel */
