@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route; // Route lets us define website URLs like /login, /register, etc.
@@ -87,8 +88,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/tickets/{ticket}/tags', [TicketController::class, 'removeTag'])->name('tickets.tags.delete');
     });
 
-    Route::get('/knowledge', fn () => view('pages.knowledge'))->name('knowledge');
-    Route::get('/knowledge-article', fn () => view('pages.knowledge-article'))->name('knowledge-article');
+    Route::get('/knowledge', [KnowledgeBaseController::class, 'index'])->name('knowledge');
+    Route::get('/knowledge/{slug}', [KnowledgeBaseController::class, 'show'])->name('knowledge.show');
+
+    // Back-compat with the old static article route.
+    Route::get('/knowledge-article', fn () => redirect()->route('knowledge'))->name('knowledge-article');
 
     Route::get('/contact', fn () => view('pages.contact'))->name('contact');
 

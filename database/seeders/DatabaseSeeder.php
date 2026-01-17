@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\DevUsersSeeder;
 use Database\Seeders\DevTicketsSeeder;
+use Database\Seeders\DevKnowledgeBaseSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DevUsersSeeder::class,
             DevTicketsSeeder::class,
+            DevKnowledgeBaseSeeder::class,
         ]);
     }
 }

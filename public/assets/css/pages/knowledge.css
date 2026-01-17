@@ -137,6 +137,8 @@
   font-size: .9rem;
 }
 .tag {
+  display: inline-flex;
+  align-items: center;
   background: #f5f2ff;
   color: #6D65C7;
   border: 1px solid #e3defa;
@@ -144,6 +146,7 @@
   padding: 6px 10px;
   font-weight: 700;
   cursor: pointer;
+  text-decoration: none;
 }
 .tag:hover { filter: brightness(1.03) }
 

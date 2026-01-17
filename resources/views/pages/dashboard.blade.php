@@ -251,6 +251,50 @@
           </section>
         @endif
 
+        @if (!$isStaff)
+          <!-- Recent Tickets (Requesters) -->
+          <section class="panel">
+            <div class="panel-header">
+              <h3>My Recent Tickets</h3>
+              <a href="{{ route('tickets.index') }}">View All</a>
+            </div>
+
+            @if ($recentTickets->count() === 0)
+              <p class="muted">No tickets yet.</p>
+            @else
+              @foreach ($recentTickets->take(3) as $t)
+                @php
+                  $desc = (string) ($t->description ?? '');
+                  if (strlen($desc) > 140) $desc = substr($desc, 0, 137).'...';
+                  $when = $formatWhen($t->created_at ?? null);
+                  $assName = trim((string) (($t->assignee_first_name ?? '').' '.($t->assignee_last_name ?? '')));
+                @endphp
+                <div class="ticket-card">
+                  <div class="ticket-header">
+                    <a class="ticket-id" href="{{ route('tickets.show', ['ticket' => $t->ticket_id]) }}">#TKT-{{ $t->ticket_id }}</a>
+                    <div class="ticket-badges">
+                      <span class="badge {{ $statusClass($t->status ?? null) }}">{{ $statusLabel($t->status ?? null) }}</span>
+                      <span class="badge {{ $priorityClass($t->priority ?? null) }}">{{ ucfirst((string) ($t->priority ?? '')) ?: 'Priority' }}</span>
+                    </div>
+                  </div>
+                  <div class="ticket-body">
+                    <h4 class="ticket-title">{{ $t->subject ?? 'Ticket' }}</h4>
+                    <p class="ticket-description">{{ $desc }}</p>
+                    <div class="ticket-meta">
+                      @if ($assName !== '')
+                        <span class="meta-pill"><i class='bx bx-user-check'></i> {{ $assName }}</span>
+                      @endif
+                      @if ($when !== '')
+                        <span class="meta-pill"><i class='bx bx-time-five'></i> {{ $when }}</span>
+                      @endif
+                    </div>
+                  </div>
+                </div>
+              @endforeach
+            @endif
+          </section>
+        @endif
+
         <!-- Insights -->
         <section class="panel">
           <div class="panel-header">
@@ -308,49 +352,6 @@
           </div>
         </section>
 
-        @if (!$isStaff)
-          <!-- Recent Tickets (Requesters) -->
-          <section class="panel">
-            <div class="panel-header">
-              <h3>My Recent Tickets</h3>
-              <a href="{{ route('tickets.index') }}">View All</a>
-            </div>
-
-            @if ($recentTickets->count() === 0)
-              <p class="muted">No tickets yet.</p>
-            @else
-              @foreach ($recentTickets as $t)
-                @php
-                  $desc = (string) ($t->description ?? '');
-                  if (strlen($desc) > 140) $desc = substr($desc, 0, 137).'...';
-                  $when = $formatWhen($t->created_at ?? null);
-                  $assName = trim((string) (($t->assignee_first_name ?? '').' '.($t->assignee_last_name ?? '')));
-                @endphp
-                <div class="ticket-card">
-                  <div class="ticket-header">
-                    <a class="ticket-id" href="{{ route('tickets.show', ['ticket' => $t->ticket_id]) }}">#TKT-{{ $t->ticket_id }}</a>
-                    <div class="ticket-badges">
-                      <span class="badge {{ $statusClass($t->status ?? null) }}">{{ $statusLabel($t->status ?? null) }}</span>
-                      <span class="badge {{ $priorityClass($t->priority ?? null) }}">{{ ucfirst((string) ($t->priority ?? '')) ?: 'Priority' }}</span>
-                    </div>
-                  </div>
-                  <div class="ticket-body">
-                    <h4 class="ticket-title">{{ $t->subject ?? 'Ticket' }}</h4>
-                    <p class="ticket-description">{{ $desc }}</p>
-                    <div class="ticket-meta">
-                      @if ($assName !== '')
-                        <span class="meta-pill"><i class='bx bx-user-check'></i> {{ $assName }}</span>
-                      @endif
-                      @if ($when !== '')
-                        <span class="meta-pill"><i class='bx bx-time-five'></i> {{ $when }}</span>
-                      @endif
-                    </div>
-                  </div>
-                </div>
-              @endforeach
-            @endif
-          </section>
-        @endif
       </div>
       
     </main>

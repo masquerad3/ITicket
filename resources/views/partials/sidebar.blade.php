@@ -26,7 +26,7 @@
 
     <nav class="menu-group">
       <h4 class="group-title">Support</h4>
-      <a @class(['menu-link', 'active' => request()->routeIs('knowledge') || request()->routeIs('knowledge-article')]) href="{{ route('knowledge') }}"><i class='bx bx-book'></i> Knowledge Base</a>
+      <a @class(['menu-link', 'active' => request()->routeIs('knowledge') || request()->routeIs('knowledge.show') || request()->routeIs('knowledge-article')]) href="{{ route('knowledge') }}"><i class='bx bx-book'></i> Knowledge Base</a>
       <!-- <a class="menu-link" href="#"><i class='bx bx-chat'></i> Live Chat</a> -->
       <a @class(['menu-link', 'active' => request()->routeIs('contact')]) href="{{ route('contact') }}"><i class='bx bx-envelope'></i> Contact</a>
     </nav>

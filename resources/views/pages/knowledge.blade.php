@@ -6,17 +6,23 @@
   <title>ITicket - Knowledge Base</title>
 
   <!-- Global/base -->
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
   <!-- Shared components -->
-  <link rel="stylesheet" href="assets/css/components/topbar.css">
-  <link rel="stylesheet" href="assets/css/components/sidebar.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/components/topbar.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/components/sidebar.css') }}">
   <!-- Page-specific -->
-  <link rel="stylesheet" href="assets/css/pages/knowledge.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/pages/knowledge.css') }}">
 
   <!-- Icons -->
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 </head>
 <body>
+  @php
+    use Illuminate\Support\Str;
+
+    $catColors = ['cat--blue', 'cat--indigo', 'cat--teal', 'cat--green', 'cat--orange', 'cat--pink'];
+    $catIcons = ['bx bx-user-check', 'bx bx-envelope', 'bx bx-plug', 'bx bx-desktop', 'bx bx-paint', 'bx bx-shield-quarter'];
+  @endphp
   <div class="page">
     <!-- Topbar -->
     <header class="topbar">
@@ -48,165 +54,151 @@
             <i class='bx bx-plus'></i> Create Ticket
           </a>
 
-          <div class="searchbar kb-search">
+          <form method="GET" action="{{ route('knowledge') }}" class="searchbar kb-search">
             <i class='bx bx-search'></i>
-            <input type="text" placeholder="Search articles (e.g., reset password, VPN, Outlook)">
+            <input
+              type="text"
+              name="q"
+              value="{{ $q ?? '' }}"
+              placeholder="Search articles (e.g., reset password, VPN, Outlook)"
+            >
+            @if (!empty($category_id))
+              <input type="hidden" name="category" value="{{ $category_id }}">
+            @endif
             <button type="button" class="btn-clear" title="Clear"><i class='bx bx-x'></i></button>
-          </div>
+          </form>
         </div>
       </section>
 
       <!-- Popular tags (neutral style) -->
       <section class="tags-row">
         <span class="tags-label">Popular:</span>
-        <button class="tag">Password</button>
-        <button class="tag">VPN</button>
-        <button class="tag">Email</button>
-        <button class="tag">Printer</button>
-        <button class="tag">Software</button>
-        <button class="tag">Network</button>
+        @foreach (collect($categories ?? [])->take(6) as $cat)
+          <a class="tag" href="{{ route('knowledge', ['category' => $cat->category_id]) }}">{{ $cat->name }}</a>
+        @endforeach
       </section>
 
       <!-- Categories with LEFT accent bar -->
       <section class="categories">
-        <article class="cat-card cat--blue">
-          <div class="cat-icon"><i class='bx bx-user-check'></i></div>
-          <div class="cat-body">
-            <h3>Account & Access</h3>
-            <p>Passwords, MFA, accounts, and permissions.</p>
-          </div>
-          <a class="cat-link" href="#account">View 18 articles</a>
-        </article>
-
-        <article class="cat-card cat--indigo">
-          <div class="cat-icon"><i class='bx bx-envelope'></i></div>
-          <div class="cat-body">
-            <h3>Email & Calendar</h3>
-            <p>Outlook, mail apps, and calendar sync.</p>
-          </div>
-          <a class="cat-link" href="#email">View 12 articles</a>
-        </article>
-
-        <article class="cat-card cat--teal">
-          <div class="cat-icon"><i class='bx bx-plug'></i></div>
-          <div class="cat-body">
-            <h3>VPN & Network</h3>
-            <p>Remote access, Wi‑Fi, and connectivity.</p>
-          </div>
-          <a class="cat-link" href="#network">View 9 articles</a>
-        </article>
-
-        <article class="cat-card cat--green">
-          <div class="cat-icon"><i class='bx bx-desktop'></i></div>
-          <div class="cat-body">
-            <h3>Devices & Printing</h3>
-            <p>Printers, peripherals, and hardware.</p>
-          </div>
-          <a class="cat-link" href="#devices">View 14 articles</a>
-        </article>
-
-        <article class="cat-card cat--orange">
-          <div class="cat-icon"><i class='bx bx-paint'></i></div>
-          <div class="cat-body">
-            <h3>Software</h3>
-            <p>Installations, licensing, and updates.</p>
-          </div>
-          <a class="cat-link" href="#software">View 22 articles</a>
-        </article>
-
-        <article class="cat-card cat--pink">
-          <div class="cat-icon"><i class='bx bx-shield-quarter'></i></div>
-          <div class="cat-body">
-            <h3>Security</h3>
-            <p>MFA, phishing, device security tips.</p>
-          </div>
-          <a class="cat-link" href="#security">View 7 articles</a>
-        </article>
+        @foreach (collect($categories ?? []) as $i => $cat)
+          @php
+            $colorClass = $catColors[$i % count($catColors)];
+            $iconClass = $catIcons[$i % count($catIcons)];
+            $count = (int) ($cat->article_count ?? 0);
+          @endphp
+          <article class="cat-card {{ $colorClass }}">
+            <div class="cat-icon"><i class='{{ $iconClass }}'></i></div>
+            <div class="cat-body">
+              <h3>{{ $cat->name }}</h3>
+              <p>{{ $cat->description ?: 'Browse helpful guides and troubleshooting articles.' }}</p>
+            </div>
+            <a class="cat-link" href="{{ route('knowledge', ['category' => $cat->category_id]) }}">View {{ $count }} {{ $count === 1 ? 'article' : 'articles' }}</a>
+          </article>
+        @endforeach
       </section>
 
       <!-- Article panels -->
       <section class="kb-grid">
-        <!-- Featured -->
-        <section class="panel kb-panel">
-          <div class="panel-head">
-            <h3>Featured Articles</h3>
-            <a class="btn-outlined small" href="#">See all</a>
-          </div>
-          <div class="panel-body articles">
-            <article class="article-row">
-              <div class="art-left">
-                <i class='bx bxs-star'></i>
-                <a class="art-title" href="{{ route('knowledge-article') }}">Reset your account password (self-service portal)</a>
-                <p class="art-snippet">Use the password portal to reset or unlock your account with MFA…</p>
-                <div class="art-tags">
-                  <span class="chip chip-low">Password</span>
-                  <span class="chip chip-medium">MFA</span>
-                </div>
-              </div>
-              <div class="art-right">
-                <span class="meta">Updated 3 days ago</span>
-              </div>
-            </article>
+        @if (!empty($q) || !empty($category_id))
+          <section class="panel kb-panel">
+            <div class="panel-head">
+              <h3>
+                @if (!empty($q))
+                  Search Results
+                @elseif (!empty($activeCategory))
+                  {{ $activeCategory->name }} Articles
+                @else
+                  Articles
+                @endif
+              </h3>
+              <a class="btn-outlined small" href="{{ route('knowledge') }}">Clear</a>
+            </div>
+            <div class="panel-body articles">
+              @forelse ($results as $a)
+                <article class="article-row">
+                  <div class="art-left">
+                    <i class='bx bx-file'></i>
+                    <a class="art-title" href="{{ route('knowledge.show', ['slug' => $a->slug]) }}">{{ $a->title }}</a>
+                    <p class="art-snippet">{{ $a->summary ?: Str::limit(strip_tags((string) ($a->content_html ?? '')), 120) }}</p>
+                    <div class="art-tags">
+                      <span class="chip chip-low">{{ $a->category_name ?? 'General' }}</span>
+                      @if (!empty($a->is_featured))
+                        <span class="chip chip-medium">Featured</span>
+                      @endif
+                    </div>
+                  </div>
+                  <div class="art-right">
+                    <span class="meta">
+                      {{ ($a->updated_at ?? null) instanceof \Illuminate\Support\Carbon ? $a->updated_at->diffForHumans() : 'Updated recently' }}
+                    </span>
+                  </div>
+                </article>
+              @empty
+                <div class="muted">No articles found. Try a different search.</div>
+              @endforelse
+            </div>
+          </section>
+        @else
+          <!-- Featured -->
+          <section class="panel kb-panel">
+            <div class="panel-head">
+              <h3>Featured Articles</h3>
+              <a class="btn-outlined small" href="{{ route('knowledge') }}">See all</a>
+            </div>
+            <div class="panel-body articles">
+              @forelse ($featured as $a)
+                <article class="article-row">
+                  <div class="art-left">
+                    <i class='bx bxs-star'></i>
+                    <a class="art-title" href="{{ route('knowledge.show', ['slug' => $a->slug]) }}">{{ $a->title }}</a>
+                    <p class="art-snippet">{{ $a->summary ?: Str::limit(strip_tags((string) ($a->content_html ?? '')), 120) }}</p>
+                    <div class="art-tags">
+                      <span class="chip chip-low">{{ $a->category_name ?? 'General' }}</span>
+                    </div>
+                  </div>
+                  <div class="art-right">
+                    <span class="meta">
+                      {{ ($a->updated_at ?? null) instanceof \Illuminate\Support\Carbon ? $a->updated_at->diffForHumans() : 'Updated recently' }}
+                    </span>
+                  </div>
+                </article>
+              @empty
+                <div class="muted">No featured articles yet.</div>
+              @endforelse
+            </div>
+          </section>
 
-            <article class="article-row">
-              <div class="art-left">
-                <i class='bx bxs-star'></i>
-                <a class="art-title" href="{{ route('knowledge-article') }}">VPN: Connect from home (Windows & macOS)</a>
-                <p class="art-snippet">Step-by-step guide to install and connect using the GlobalProtect client…</p>
-              </div>
-              <div class="art-right"><span class="meta">Updated 1 week ago</span></div>
-            </article>
-
-            <article class="article-row">
-              <div class="art-left">
-                <i class='bx bxs-star'></i>
-                <a class="art-title" href="{{ route('knowledge-article') }}">Outlook: Fix “Disconnected” status</a>
-                <p class="art-snippet">Troubleshoot connectivity and profile issues causing Outlook to go offline…</p>
-              </div>
-              <div class="art-right"><span class="meta">Updated yesterday</span></div>
-            </article>
-          </div>
-        </section>
-
-        <!-- Latest -->
-        <section class="panel kb-panel">
-          <div class="panel-head">
-            <h3>Latest Articles</h3>
-            <a class="btn-outlined small" href="#">See all</a>
-          </div>
-          <div class="panel-body articles">
-            <article class="article-row">
-              <div class="art-left">
-                <i class='bx bx-file'></i>
-                <a class="art-title" href="#">Teams: Schedule a meeting with external guests</a>
-                <p class="art-snippet">Allow external emails, add the guest, and send the calendar invite…</p>
-              </div>
-              <div class="art-right"><span class="meta">2 days ago</span></div>
-            </article>
-
-            <article class="article-row">
-              <div class="art-left">
-                <i class='bx bx-file'></i>
-                <a class="art-title" href="#">Printer: Add campus printer on macOS</a>
-                <p class="art-snippet">Download the driver, add IP printer, select protocol and queue…</p>
-              </div>
-              <div class="art-right"><span class="meta">4 days ago</span></div>
-            </article>
-
-            <article class="article-row">
-              <div class="art-left">
-                <i class='bx bx-file'></i>
-                <a class="art-title" href="#">Request Adobe license for Marketing</a>
-                <p class="art-snippet">Complete the software request form and attach manager approval…</p>
-              </div>
-              <div class="art-right"><span class="meta">1 week ago</span></div>
-            </article>
-          </div>
-        </section>
+          <!-- Latest -->
+          <section class="panel kb-panel">
+            <div class="panel-head">
+              <h3>Latest Articles</h3>
+              <a class="btn-outlined small" href="{{ route('knowledge') }}">See all</a>
+            </div>
+            <div class="panel-body articles">
+              @forelse ($latest as $a)
+                <article class="article-row">
+                  <div class="art-left">
+                    <i class='bx bx-file'></i>
+                    <a class="art-title" href="{{ route('knowledge.show', ['slug' => $a->slug]) }}">{{ $a->title }}</a>
+                    <p class="art-snippet">{{ $a->summary ?: Str::limit(strip_tags((string) ($a->content_html ?? '')), 120) }}</p>
+                  </div>
+                  <div class="art-right">
+                    <span class="meta">
+                      {{ ($a->updated_at ?? null) instanceof \Illuminate\Support\Carbon ? $a->updated_at->diffForHumans() : 'Updated recently' }}
+                    </span>
+                  </div>
+                </article>
+              @empty
+                <div class="muted">No articles yet.</div>
+              @endforelse
+            </div>
+          </section>
+        @endif
       </section>
     </main>
   </div>
 
-  <script src="assets/js/components/sidebar.js"></script>
+  <script src="{{ asset('assets/js/components/sidebar.js') }}"></script>
+  <script src="{{ asset('assets/js/pages/knowledge.js') }}"></script>
 </body>
 </html>
